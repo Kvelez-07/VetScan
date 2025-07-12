@@ -1,0 +1,102 @@
+﻿@model VetScan.ViewModels.VaccinationHistoryFormViewModel
+@{
+    ViewData["Title"] = "Nueva Vacunación";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="text-center mb-0">@ViewData["Title"]</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="PetId" class="form-label"></label>
+                                <select asp-for="PetId" class="form-select" required>
+                                    <option value="">-- Seleccione mascota --</option>
+                                    @foreach (var pet in ViewBag.Pets)
+                                    {
+                                        <option value="@pet.PetId">@pet.DisplayText</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="PetId" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="VaccineId" class="form-label"></label>
+                                <select asp-for="VaccineId" class="form-select" required>
+                                    <option value="">-- Seleccione vacuna --</option>
+                                    @foreach (var vaccine in ViewBag.Vaccines)
+                                    {
+                                        <option value="@vaccine.VaccineId">@vaccine.DisplayText</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="VaccineId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="VeterinarianId" class="form-label"></label>
+                                <select asp-for="VeterinarianId" class="form-select" required>
+                                    <option value="">-- Seleccione veterinario --</option>
+                                    @foreach (var vet in ViewBag.Veterinarians)
+                                    {
+                                        <option value="@vet.VeterinarianId">@vet.DisplayText</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="VeterinarianId" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="VaccinationDate" class="form-label"></label>
+                                <input asp-for="VaccinationDate" type="date" class="form-control" required />
+                                <span asp-validation-for="VaccinationDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="BatchNumber" class="form-label"></label>
+                                <input asp-for="BatchNumber" class="form-control" />
+                                <span asp-validation-for="BatchNumber" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ExpirationDate" class="form-label"></label>
+                                <input asp-for="ExpirationDate" type="date" class="form-control" />
+                                <span asp-validation-for="ExpirationDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="NextDueDate" class="form-label"></label>
+                                <input asp-for="NextDueDate" type="date" class="form-control" />
+                                <span asp-validation-for="NextDueDate" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Reactions" class="form-label"></label>
+                                <input asp-for="Reactions" class="form-control" />
+                                <span asp-validation-for="Reactions" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-secondary me-md-2">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

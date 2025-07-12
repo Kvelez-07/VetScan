@@ -1,0 +1,67 @@
+﻿@model VetScan.ViewModels.MedicalRecordFormViewModel
+
+@{
+    ViewData["Title"] = "Nuevo Registro Médico";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="text-center mb-0">@ViewData["Title"]</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="PetId" class="form-label"></label>
+                            <select asp-for="PetId" class="form-select" required>
+                                <option value="">-- Seleccione una mascota --</option>
+                                @foreach (var pet in ViewBag.Pets)
+                                {
+                                    <option value="@pet.PetId">@pet.DisplayText</option>
+                                }
+                            </select>
+                            <span asp-validation-for="PetId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="RecordNumber" class="form-label"></label>
+                            <input asp-for="RecordNumber" class="form-control" />
+                            <span asp-validation-for="RecordNumber" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="GeneralNotes" class="form-label"></label>
+                            <textarea asp-for="GeneralNotes" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="GeneralNotes" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Status" class="form-label"></label>
+                            <select asp-for="Status" class="form-select">
+                                <option value="Active">Activo</option>
+                                <option value="Inactive">Inactivo</option>
+                                <option value="Archived">Archivado</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-secondary me-md-2">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,59 @@
+﻿@model VetScan.Models.Prescription
+@{
+    ViewData["Title"] = "Eliminar Prescripción";
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-danger text-white">
+            <h2 class="mb-0">@ViewData["Title"]</h2>
+        </div>
+        <div class="card-body">
+            <h3>¿Estás seguro que deseas eliminar esta prescripción?</h3>
+
+            <div class="alert alert-warning">
+                <strong>Advertencia:</strong> Esta acción no se puede deshacer.
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Mascota:</dt>
+                        <dd class="col-sm-8">@Model.Consultation.MedicalRecord.Pet.PetName</dd>
+
+                        <dt class="col-sm-4">Consulta:</dt>
+                        <dd class="col-sm-8">@Model.Consultation.ConsultationDate.ToString("dd/MM/yyyy")</dd>
+
+                        <dt class="col-sm-4">Medicamento:</dt>
+                        <dd class="col-sm-8">@Model.Medication.MedicationName</dd>
+                    </dl>
+                </div>
+
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Dosis:</dt>
+                        <dd class="col-sm-8">@Model.Dosage</dd>
+
+                        <dt class="col-sm-4">Frecuencia:</dt>
+                        <dd class="col-sm-8">@Model.Frequency</dd>
+
+                        <dt class="col-sm-4">Estado:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge @(Model.Status == "Active" ? "bg-success" : "bg-secondary")">
+                                @Model.Status
+                            </span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <form asp-action="Delete">
+                <input type="hidden" asp-for="PrescriptionId" />
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <a asp-action="Index" class="btn btn-secondary me-md-2">Cancelar</a>
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

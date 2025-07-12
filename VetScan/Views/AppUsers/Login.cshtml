@@ -1,0 +1,50 @@
+﻿@model VetScan.ViewModels.LoginViewModel
+
+@{
+    ViewData["Title"] = "Iniciar Sesión";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="text-center">Iniciar Sesión</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Login">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Username" class="control-label"></label>
+                            <input asp-for="Username" class="form-control" />
+                            <span asp-validation-for="Username" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Password" class="control-label"></label>
+                            <input asp-for="Password" type="password" class="form-control" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center">
+                    ¿No tienes cuenta? <a asp-action="SignUp">Regístrate aquí</a>
+                </div>
+                <div class="text-center mt-3">
+                    <a asp-action="ChangePassword">Cambiar contraseña</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,112 @@
+﻿@model VetScan.ViewModels.AppointmentFormViewModel
+@{
+    ViewData["Title"] = "Editar Cita";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="text-center mb-0">@ViewData["Title"]</h2>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Edit">
+                        <input type="hidden" asp-for="AppointmentId" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Mascota</label>
+                                <input class="form-control" value="@ViewBag.PetName" disabled />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Veterinario</label>
+                                <input class="form-control" value="@ViewBag.VeterinarianName" disabled />
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="AppointmentDate" class="form-label"></label>
+                                <input asp-for="AppointmentDate" type="datetime-local" class="form-control" />
+                                <span asp-validation-for="AppointmentDate" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="Duration" class="form-label"></label>
+                                <input asp-for="Duration" class="form-control" />
+                                <span asp-validation-for="Duration" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="AppointmentType" class="form-label"></label>
+                                <select asp-for="AppointmentType" class="form-select">
+                                    @foreach (var type in ViewBag.AppointmentTypes)
+                                    {
+                                        <option value="@type">@type</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="AppointmentType" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="ReasonForVisit" class="form-label"></label>
+                                <input asp-for="ReasonForVisit" class="form-control" />
+                                <span asp-validation-for="ReasonForVisit" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Status" class="form-label"></label>
+                                <select asp-for="Status" class="form-select">
+                                    @foreach (var status in ViewBag.StatusOptions)
+                                    {
+                                        <option value="@status">@status</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="Status" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="EstimatedCost" class="form-label"></label>
+                                <input asp-for="EstimatedCost" class="form-control" />
+                                <span asp-validation-for="EstimatedCost" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ActualCost" class="form-label"></label>
+                                <input asp-for="ActualCost" class="form-control" />
+                                <span asp-validation-for="ActualCost" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Notes" class="form-label"></label>
+                            <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Notes" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-secondary me-md-2">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,113 @@
+﻿@model VetScan.ViewModels.PrescriptionFormViewModel
+@{
+    ViewData["Title"] = Model.PrescriptionId == 0 ? "Nueva Prescripción" : "Editar Prescripción";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="text-center mb-0">@ViewData["Title"]</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="@(Model.PrescriptionId == 0 ? "Create" : "Edit")">
+                        <input type="hidden" asp-for="PrescriptionId" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="ConsultationId" class="form-label"></label>
+                                <select asp-for="ConsultationId" class="form-select" required>
+                                    <option value="">-- Seleccione una consulta --</option>
+                                    @foreach (var consultation in ViewBag.Consultations)
+                                    {
+                                        <option value="@consultation.ConsultationId">@consultation.DisplayText</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="ConsultationId" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="MedicationId" class="form-label"></label>
+                                <select asp-for="MedicationId" class="form-select" required>
+                                    <option value="">-- Seleccione un medicamento --</option>
+                                    @foreach (var medication in ViewBag.Medications)
+                                    {
+                                        <option value="@medication.MedicationId">@medication.DisplayText</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="MedicationId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Dosage" class="form-label"></label>
+                                <input asp-for="Dosage" class="form-control" />
+                                <span asp-validation-for="Dosage" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Frequency" class="form-label"></label>
+                                <input asp-for="Frequency" class="form-control" />
+                                <span asp-validation-for="Frequency" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Duration" class="form-label"></label>
+                                <input asp-for="Duration" class="form-control" />
+                                <span asp-validation-for="Duration" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Status" class="form-label"></label>
+                                <select asp-for="Status" class="form-select">
+                                    @foreach (var status in ViewBag.StatusOptions)
+                                    {
+                                        <option value="@status">@status</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="Status" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label asp-for="Quantity" class="form-label"></label>
+                                <input asp-for="Quantity" type="number" class="form-control" />
+                                <span asp-validation-for="Quantity" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Refills" class="form-label"></label>
+                                <input asp-for="Refills" type="number" class="form-control" />
+                                <span asp-validation-for="Refills" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="StartDate" class="form-label"></label>
+                                <input asp-for="StartDate" type="date" class="form-control" />
+                                <span asp-validation-for="StartDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Instructions" class="form-label"></label>
+                            <textarea asp-for="Instructions" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Instructions" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-secondary me-md-2">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

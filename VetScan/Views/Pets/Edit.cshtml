@@ -1,0 +1,171 @@
+﻿@model VetScan.ViewModels.PetFormViewModel
+
+@{
+    ViewData["Title"] = "Editar Mascota";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="text-center mb-0">@ViewData["Title"]</h2>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="PetId" />
+                        <input type="hidden" asp-for="PetOwnerId" />
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Dueño actual</label>
+                            <input class="form-control" value="@ViewBag.OwnerName" disabled />
+                            <small class="text-muted">No se puede cambiar el dueño de la mascota</small>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="PetName" class="form-label">Nombre de la mascota</label>
+                                <input asp-for="PetName" class="form-control" />
+                                <span asp-validation-for="PetName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="PetCode" class="form-label">Código de mascota</label>
+                                <input asp-for="PetCode" class="form-control" />
+                                <span asp-validation-for="PetCode" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="SpeciesId" class="form-label">Especie</label>
+                                <select asp-for="SpeciesId" class="form-select" required
+                                        onchange="loadBreeds(this.value)">
+                                    <option value="">-- Seleccione una especie --</option>
+                                    @foreach (var species in ViewBag.Species)
+                                    {
+                                        <option value="@species.SpeciesId">@species.SpeciesName</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="SpeciesId" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="BreedId" class="form-label">Raza (opcional)</label>
+                                <select asp-for="BreedId" class="form-select" id="breedSelect">
+                                    <option value="">-- Seleccione una raza --</option>
+                                    @foreach (var breed in ViewBag.Breeds)
+                                    {
+                                        <option value="@breed.BreedId" data-species="@breed.SpeciesId">@breed.BreedName</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="BreedId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label asp-for="Gender" class="form-label">Género</label>
+                                <select asp-for="Gender" class="form-select">
+                                    <option value="">-- No especificado --</option>
+                                    <option value="M">Macho</option>
+                                    <option value="F">Hembra</option>
+                                </select>
+                                <span asp-validation-for="Gender" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="DateOfBirth" class="form-label">Fecha de nacimiento</label>
+                                <input asp-for="DateOfBirth" type="date" class="form-control" />
+                                <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Weight" class="form-label">Peso (kg)</label>
+                                <input asp-for="Weight" type="number" step="0.1" class="form-control" />
+                                <span asp-validation-for="Weight" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Color" class="form-label">Color</label>
+                            <input asp-for="Color" class="form-control" />
+                            <span asp-validation-for="Color" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-arrow-left"></i> Volver
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        // Cargar las razas correspondientes a la especie seleccionada
+        function loadBreeds(speciesId) {
+            const breedSelect = document.getElementById('breedSelect');
+            const options = breedSelect.querySelectorAll('option');
+
+            // Mostrar todas las opciones primero
+            options.forEach(opt => opt.style.display = '');
+
+            if (speciesId) {
+                // Ocultar razas que no correspondan a la especie seleccionada
+                options.forEach(opt => {
+                    if (opt.value && opt.dataset.species !== speciesId) {
+                        opt.style.display = 'none';
+                    }
+                });
+
+                // Resetear la selección si la raza actual no pertenece a la especie
+                const currentBreed = breedSelect.value;
+                if (currentBreed) {
+                    const currentOption = breedSelect.querySelector(`option[value="${currentBreed}"]`);
+                    if (currentOption && currentOption.style.display === 'none') {
+                        breedSelect.value = '';
+                    }
+                }
+            }
+        }
+
+        // Inicializar el formulario con los valores actuales
+        document.addEventListener('DOMContentLoaded', function() {
+            // Seleccionar la especie actual
+            const speciesSelect = document.querySelector('select[name="SpeciesId"]');
+            if (speciesSelect) {
+                speciesSelect.value = '@Model.SpeciesId';
+                loadBreeds('@Model.SpeciesId');
+            }
+
+            // Seleccionar la raza actual si existe
+            const breedSelect = document.getElementById('breedSelect');
+            if (breedSelect && '@Model.BreedId' !== '0') {
+                breedSelect.value = '@Model.BreedId';
+            }
+
+            // Seleccionar el género actual si existe
+            const genderSelect = document.querySelector('select[name="Gender"]');
+            if (genderSelect && '@Model.Gender' !== '') {
+                genderSelect.value = '@Model.Gender';
+            }
+        });
+    </script>
+}

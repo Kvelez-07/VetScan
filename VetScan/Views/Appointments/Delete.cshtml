@@ -1,0 +1,48 @@
+﻿@model VetScan.Models.Appointment
+@{
+    ViewData["Title"] = "Eliminar Cita";
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-danger text-white">
+            <h2 class="mb-0">@ViewData["Title"]</h2>
+        </div>
+        <div class="card-body">
+            <h3>¿Estás seguro que deseas eliminar esta cita?</h3>
+
+            <div class="alert alert-warning mt-4">
+                <strong>¡Advertencia!</strong> Esta acción no se puede deshacer.
+            </div>
+
+            <div class="mt-4">
+                <h4>Detalles de la Cita</h4>
+                <dl class="row">
+                    <dt class="col-sm-3">Mascota:</dt>
+                    <dd class="col-sm-9">@Model.Pet.PetName</dd>
+
+                    <dt class="col-sm-3">Veterinario:</dt>
+                    <dd class="col-sm-9">@Model.Veterinarian.User.FirstName @Model.Veterinarian.User.LastName</dd>
+
+                    <dt class="col-sm-3">Fecha:</dt>
+                    <dd class="col-sm-9">@Model.AppointmentDate.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                    <dt class="col-sm-3">Tipo:</dt>
+                    <dd class="col-sm-9">@Model.AppointmentType</dd>
+
+                    <dt class="col-sm-3">Estado:</dt>
+                    <dd class="col-sm-9">@Model.Status</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="card-footer">
+            <form asp-action="Delete">
+                <input type="hidden" asp-for="AppointmentId" />
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

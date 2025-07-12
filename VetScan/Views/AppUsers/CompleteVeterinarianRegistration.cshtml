@@ -1,0 +1,66 @@
+﻿@model VetScan.ViewModels.VeterinarianFormViewModel
+
+@{
+    ViewData["Title"] = "Completar Registro de Veterinario";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="text-center mb-0">@ViewData["Title"]</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CompleteVeterinarianRegistration" method="post">
+                        <input type="hidden" name="userId" value="@ViewBag.UserId" />
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre</label>
+                                <input class="form-control" value="@Model.FirstName @Model.LastName" disabled />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Correo</label>
+                                <input class="form-control" value="@Model.Email" disabled />
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="YearsOfExperience" class="form-label">Años de Experiencia</label>
+                                <input asp-for="YearsOfExperience" type="number" class="form-control" />
+                                <span asp-validation-for="YearsOfExperience" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="SpecialtyId" class="form-label">Especialidad</label>
+                                <select asp-for="SpecialtyId" class="form-select" asp-items="@(new SelectList(ViewBag.Specialties, "SpecialtyId", "SpecialtyName"))">
+                                    <option value="">-- Seleccione una especialidad --</option>
+                                </select>
+                                <span asp-validation-for="SpecialtyId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Education" class="form-label">Educación/Formación</label>
+                            <textarea asp-for="Education" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Education" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Completar Registro</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

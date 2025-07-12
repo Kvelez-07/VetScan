@@ -1,0 +1,99 @@
+﻿@model VetScan.ViewModels.VaccineFormViewModel
+@{
+    ViewData["Title"] = Model.VaccineId == 0 ? "Nueva Vacuna" : "Editar Vacuna";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="text-center mb-0">@ViewData["Title"]</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="@(Model.VaccineId == 0 ? "Create" : "Edit")">
+                        <input type="hidden" asp-for="VaccineId" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label asp-for="VaccineName" class="form-label"></label>
+                                <input asp-for="VaccineName" class="form-control" />
+                                <span asp-validation-for="VaccineName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="VaccineType" class="form-label"></label>
+                                <select asp-for="VaccineType" class="form-select">
+                                    <option value="">-- Seleccione tipo --</option>
+                                    @foreach (var type in ViewBag.VaccineTypes)
+                                    {
+                                        <option value="@type">@type</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="VaccineType" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Manufacturer" class="form-label"></label>
+                                <input asp-for="Manufacturer" class="form-control" />
+                                <span asp-validation-for="Manufacturer" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="SpeciesId" class="form-label"></label>
+                                <select asp-for="SpeciesId" class="form-select">
+                                    <option value="">-- Para todas las especies --</option>
+                                    @foreach (var species in ViewBag.Species)
+                                    {
+                                        <option value="@species.SpeciesId">@species.DisplayText</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="SpeciesId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="RecommendedAge" class="form-label"></label>
+                                <input asp-for="RecommendedAge" class="form-control" placeholder="Ej: 8 semanas" />
+                                <span asp-validation-for="RecommendedAge" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="BoosterInterval" class="form-label"></label>
+                                <input asp-for="BoosterInterval" type="number" class="form-control" placeholder="En días" />
+                                <span asp-validation-for="BoosterInterval" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input asp-for="IsCore" class="form-check-input" type="checkbox">
+                                    <label asp-for="IsCore" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input asp-for="IsActive" class="form-check-input" type="checkbox">
+                                    <label asp-for="IsActive" class="form-check-label"></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-secondary me-md-2">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

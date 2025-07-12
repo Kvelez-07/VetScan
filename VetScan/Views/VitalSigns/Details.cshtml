@@ -1,0 +1,87 @@
+﻿@model VetScan.ViewModels.VitalSignListViewModel
+@{
+    ViewData["Title"] = "Detalles de Signos Vitales";
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">Registro del @Model.FormattedDate</h2>
+                <div>
+                    <a asp-action="Edit" asp-route-id="@Model.VitalSignId" class="btn btn-sm btn-warning">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                    <a asp-action="Index" class="btn btn-sm btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Fecha:</dt>
+                        <dd class="col-sm-8">@Model.FormattedDate</dd>
+
+                        <dt class="col-sm-4">Mascota:</dt>
+                        <dd class="col-sm-8">@Model.PetName</dd>
+
+                        <dt class="col-sm-4">Consulta:</dt>
+                        <dd class="col-sm-8">@Model.ConsultationInfo</dd>
+                    </dl>
+                </div>
+
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Temperatura:</dt>
+                        <dd class="col-sm-8">@Model.FormattedTemperature</dd>
+
+                        <dt class="col-sm-4">Frec. Cardíaca:</dt>
+                        <dd class="col-sm-8">@Model.FormattedHeartRate</dd>
+
+                        <dt class="col-sm-4">Frec. Respiratoria:</dt>
+                        <dd class="col-sm-8">@Model.FormattedRespiratoryRate</dd>
+
+                        <dt class="col-sm-4">Peso:</dt>
+                        <dd class="col-sm-8">@Model.FormattedWeight</dd>
+
+                        <dt class="col-sm-4">Presión:</dt>
+                        <dd class="col-sm-8">@Model.BloodPressure</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <h4>Notas Adicionales</h4>
+                <div class="card">
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(ViewBag.Notes))
+                        {
+                            <p class="card-text">@ViewBag.Notes</p>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No hay notas adicionales</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <div class="d-flex justify-content-between">
+                <small class="text-muted">
+                    ID: @Model.VitalSignId | Registrado: @Model.FormattedDate
+                </small>
+                <div>
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-list"></i> Volver al listado
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

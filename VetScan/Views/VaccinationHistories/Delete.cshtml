@@ -1,0 +1,50 @@
+﻿@model VetScan.Models.VaccinationHistory
+@{
+    ViewData["Title"] = "Eliminar Vacunación";
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-danger text-white">
+            <h2 class="mb-0">@ViewData["Title"]</h2>
+        </div>
+        <div class="card-body">
+            <h3>¿Está seguro que desea eliminar este registro?</h3>
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Mascota:</dt>
+                        <dd class="col-sm-8">@Model.Pet.PetName</dd>
+
+                        <dt class="col-sm-4">Vacuna:</dt>
+                        <dd class="col-sm-8">@Model.Vaccine.VaccineName</dd>
+
+                        <dt class="col-sm-4">Veterinario:</dt>
+                        <dd class="col-sm-8">@Model.Veterinarian.User.FirstName</dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Fecha:</dt>
+                        <dd class="col-sm-8">@Model.VaccinationDate.ToString("dd/MM/yyyy")</dd>
+
+                        <dt class="col-sm-4">Lote:</dt>
+                        <dd class="col-sm-8">@(Model.BatchNumber ?? "N/A")</dd>
+
+                        <dt class="col-sm-4">Próxima dosis:</dt>
+                        <dd class="col-sm-8">@(Model.NextDueDate?.ToString("dd/MM/yyyy") ?? "N/A")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <form asp-action="Delete" method="post">
+                <input type="hidden" asp-for="VaccinationId" />
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

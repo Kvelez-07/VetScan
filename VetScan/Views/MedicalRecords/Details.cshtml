@@ -1,0 +1,117 @@
+﻿@model VetScan.ViewModels.MedicalRecordListViewModel
+
+@{
+    ViewData["Title"] = "Detalles de Registro Médico";
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">Registro: @Model.RecordNumber</h2>
+                <div>
+                    <a asp-action="Edit" asp-route-id="@Model.MedicalRecordId" class="btn btn-sm btn-warning">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                    <a asp-action="Index" class="btn btn-sm btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Número:</dt>
+                        <dd class="col-sm-8">@Model.RecordNumber</dd>
+
+                        <dt class="col-sm-4">Fecha:</dt>
+                        <dd class="col-sm-8">@Model.FormattedCreationDate</dd>
+
+                        <dt class="col-sm-4">Estado:</dt>
+                        <dd class="col-sm-8">
+                            <span class="@Model.StatusClass">@Model.Status</span>
+                        </dd>
+                    </dl>
+                </div>
+
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Mascota:</dt>
+                        <dd class="col-sm-8">
+                            <a asp-controller="Pets" asp-action="Details" asp-route-id="@Model.PetId">
+                                @Model.PetName (@ViewBag.PetCode)
+                            </a>
+                        </dd>
+
+                        <dt class="col-sm-4">Dueño:</dt>
+                        <dd class="col-sm-8">@Model.OwnerName</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <h4>Notas Generales</h4>
+                <div class="card">
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(ViewBag.GeneralNotes))
+                        {
+                            <p class="card-text">@ViewBag.GeneralNotes</p>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No hay notas registradas</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h4>Consultas Relacionadas</h4>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Vista previa de consultas médicas asociadas a este registro.
+                    <a asp-controller="MedicalConsultations" asp-action="Details" asp-route-id="@Model.MedicalRecordId" class="btn btn-link">
+                        Ver todas las consultas
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <div class="d-flex justify-content-between">
+                <small class="text-muted">
+                    ID: @Model.MedicalRecordId | Creado: @Model.FormattedCreationDate
+                </small>
+                <div>
+@*                     <a asp-action="Edit" asp-route-id="@Model.MedicalRecordId" class="btn btn-warning">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a> *@
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-list"></i> Volver al listado
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .status-active {
+        color: #fff;
+        background-color: #28a745;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.875em;
+    }
+
+    .status-inactive {
+        color: #fff;
+        background-color: #6c757d;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.875em;
+    }
+</style>

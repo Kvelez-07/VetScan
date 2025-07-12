@@ -1,0 +1,121 @@
+﻿@model IEnumerable<VetScan.ViewModels.PetListViewModel>
+
+@{
+    ViewData["Title"] = "Lista de Mascotas";
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>@ViewData["Title"]</h1>
+        <a asp-controller="Pets" asp-action="SignUp" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Nueva Mascota
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form asp-action="Index" method="get" class="row g-2">
+                <div class="col-md-8">
+                    <input type="text" class="form-control" name="searchString"
+                           value="@ViewData["CurrentFilter"]" placeholder="Buscar por nombre o código...">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
+                <div class="col-md-2">
+                    <a asp-action="Index" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-x-circle"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Especie</th>
+                            <th>Raza</th>
+                            <th>Dueño</th>
+                            <th>Fecha Nac.</th>
+                            <th>Edad</th>
+                            <th>Género</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Any())
+                        {
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.PetCode</td>
+                                    <td>@item.PetName</td>
+                                    <td>@item.Species</td>
+                                    <td>@(item.Breed ?? "N/A")</td>
+                                    <td>@item.OwnerName</td>
+                                    <td>@(item.DateOfBirth?.ToString("dd/MM/yyyy") ?? "N/A")</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">@item.AgeDisplay</span>
+                                    </td>
+                                    <td>@(item.GenderDisplay ?? "N/A")</td>
+                                    <td class="text-end">
+                                        <div class="d-flex gap-1 justify-content-end">
+                                            <a asp-action="Details" asp-route-id="@item.PetId"
+                                               class="btn btn-sm btn-outline-primary" title="Detalles">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@item.PetId"
+                                               class="btn btn-sm btn-outline-warning" title="Editar">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <form asp-action="Delete" method="post" class="d-inline">
+                                                <input type="hidden" name="id" value="@item.PetId" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                        title="Eliminar"
+                                                        onclick="return confirm('¿Eliminar esta mascota?')">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center">No se encontraron mascotas.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

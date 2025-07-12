@@ -1,0 +1,46 @@
+﻿@model VetScan.ViewModels.BreedListViewModel
+@{
+    ViewData["Title"] = "Detalles de Raza";
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">@Model.BreedName</h2>
+                <div>
+                    <a asp-action="Edit" asp-route-id="@Model.BreedId" class="btn btn-sm btn-warning">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                    <a asp-action="Index" class="btn btn-sm btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Nombre:</dt>
+                <dd class="col-sm-9">@Model.BreedName</dd>
+
+                <dt class="col-sm-3">Especie:</dt>
+                <dd class="col-sm-9">@Model.SpeciesName</dd>
+
+                <dt class="col-sm-3">Estado:</dt>
+                <dd class="col-sm-9"><span class="@Model.StatusClass">@Model.StatusText</span></dd>
+
+                <dt class="col-sm-3">Descripción:</dt>
+                <dd class="col-sm-9">@(Model.Description ?? "No disponible")</dd>
+            </dl>
+        </div>
+
+        <div class="card-footer">
+            <div class="d-flex justify-content-end gap-2">
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-list"></i> Volver al listado
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

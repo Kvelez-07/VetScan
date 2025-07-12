@@ -1,0 +1,85 @@
+﻿@model VetScan.ViewModels.VaccinationHistoryFormViewModel
+@{
+    ViewData["Title"] = "Editar Vacunación";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="text-center mb-0">@ViewData["Title"]</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit">
+                        <input type="hidden" asp-for="VaccinationId" />
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Mascota</label>
+                                <input type="text" class="form-control" value="@ViewBag.PetName" readonly />
+                                <input type="hidden" asp-for="PetId" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Vacuna</label>
+                                <input type="text" class="form-control" value="@ViewBag.VaccineName" readonly />
+                                <input type="hidden" asp-for="VaccineId" />
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Veterinario</label>
+                                <input type="text" class="form-control" value="@ViewBag.VeterinarianName" readonly />
+                                <input type="hidden" asp-for="VeterinarianId" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="VaccinationDate" class="form-label"></label>
+                                <input asp-for="VaccinationDate" type="date" class="form-control" required />
+                                <span asp-validation-for="VaccinationDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="BatchNumber" class="form-label"></label>
+                                <input asp-for="BatchNumber" class="form-control" />
+                                <span asp-validation-for="BatchNumber" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ExpirationDate" class="form-label"></label>
+                                <input asp-for="ExpirationDate" type="date" class="form-control" />
+                                <span asp-validation-for="ExpirationDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="NextDueDate" class="form-label"></label>
+                                <input asp-for="NextDueDate" type="date" class="form-control" />
+                                <span asp-validation-for="NextDueDate" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Reactions" class="form-label"></label>
+                                <input asp-for="Reactions" class="form-control" />
+                                <span asp-validation-for="Reactions" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-secondary me-md-2">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

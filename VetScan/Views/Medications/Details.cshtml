@@ -1,0 +1,86 @@
+﻿@model VetScan.ViewModels.MedicationListViewModel
+
+@{
+    ViewData["Title"] = "Detalles de Medicamento";
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">@Model.MedicationName</h2>
+                <div>
+                    <a asp-action="Edit" asp-route-id="@Model.MedicationId" class="btn btn-sm btn-warning">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                    <a asp-action="Index" class="btn btn-sm btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Nombre Comercial:</dt>
+                        <dd class="col-sm-8">@Model.MedicationName</dd>
+
+                        <dt class="col-sm-4">Nombre Genérico:</dt>
+                        <dd class="col-sm-8">@(Model.GenericName ?? "N/A")</dd>
+
+                        <dt class="col-sm-4">Fabricante:</dt>
+                        <dd class="col-sm-8">@(Model.Manufacturer ?? "N/A")</dd>
+                    </dl>
+                </div>
+
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Concentración:</dt>
+                        <dd class="col-sm-8">@(Model.Concentration ?? "N/A")</dd>
+
+                        <dt class="col-sm-4">Categoría:</dt>
+                        <dd class="col-sm-8">@(Model.Category ?? "N/A")</dd>
+
+                        <dt class="col-sm-4">Estado:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge @(ViewBag.IsActive == "Activo" ? "bg-success" : "bg-secondary")">
+                                @ViewBag.IsActive
+                            </span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <dl class="row">
+                        <dt class="col-sm-2">Fecha de Creación:</dt>
+                        <dd class="col-sm-10">@ViewBag.CreatedDate</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h4>Prescripciones Relacionadas</h4>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Aquí puedes mostrar las prescripciones que usan este medicamento.
+                    <a href="#" class="alert-link">Ver todas las prescripciones</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <div class="d-flex justify-content-end gap-2">
+@*                 <a asp-action="Edit" asp-route-id="@Model.MedicationId" class="btn btn-warning">
+                    <i class="bi bi-pencil"></i> Editar
+                </a> *@
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-list"></i> Volver al listado
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,58 @@
+﻿@model VetScan.Models.VitalSign
+@{
+    ViewData["Title"] = "Eliminar Registro de Signos Vitales";
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-danger text-white">
+            <h2 class="mb-0">@ViewData["Title"]</h2>
+        </div>
+        <div class="card-body">
+            <h3>¿Estás seguro que deseas eliminar este registro?</h3>
+
+            <div class="alert alert-warning">
+                <strong>Advertencia:</strong> Esta acción no se puede deshacer.
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Fecha:</dt>
+                        <dd class="col-sm-8">@Model.RecordedDate.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                        <dt class="col-sm-4">Temperatura:</dt>
+                        <dd class="col-sm-8">@(Model.Temperature?.ToString() ?? "N/A") °C</dd>
+
+                        <dt class="col-sm-4">Frec. Cardíaca:</dt>
+                        <dd class="col-sm-8">@(Model.HeartRate?.ToString() ?? "N/A") lpm</dd>
+                    </dl>
+                </div>
+
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Frec. Respiratoria:</dt>
+                        <dd class="col-sm-8">@(Model.RespiratoryRate?.ToString() ?? "N/A") rpm</dd>
+
+                        <dt class="col-sm-4">Peso:</dt>
+                        <dd class="col-sm-8">@(Model.Weight?.ToString() ?? "N/A") kg</dd>
+
+                        <dt class="col-sm-4">Presión:</dt>
+                        <dd class="col-sm-8">
+                            @(Model.BloodPressureSystolic.HasValue && Model.BloodPressureDiastolic.HasValue ?
+                                                        $"{Model.BloodPressureSystolic}/{Model.BloodPressureDiastolic}" : "N/A")
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <form asp-action="Delete">
+                <input type="hidden" asp-for="VitalSignId" />
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <a asp-action="Index" class="btn btn-secondary me-md-2">Cancelar</a>
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

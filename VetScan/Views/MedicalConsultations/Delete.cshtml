@@ -1,0 +1,55 @@
+﻿@model VetScan.Models.MedicalConsultation
+@{
+    ViewData["Title"] = "Eliminar Consulta Médica";
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-danger text-white">
+            <h2 class="mb-0">@ViewData["Title"]</h2>
+        </div>
+        <div class="card-body">
+            <h3>¿Estás seguro que deseas eliminar esta consulta médica?</h3>
+
+            <div class="alert alert-warning">
+                <strong>Advertencia:</strong> Esta acción no se puede deshacer.
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Fecha:</dt>
+                        <dd class="col-sm-8">@Model.ConsultationDate.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                        <dt class="col-sm-4">Tipo:</dt>
+                        <dd class="col-sm-8">@Model.ConsultationType</dd>
+
+                        <dt class="col-sm-4">Estado:</dt>
+                        <dd class="col-sm-8">@Model.Status</dd>
+                    </dl>
+                </div>
+
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Mascota:</dt>
+                        <dd class="col-sm-8">@Model.MedicalRecord.Pet.PetName</dd>
+
+                        <dt class="col-sm-4">Registro:</dt>
+                        <dd class="col-sm-8">@Model.MedicalRecord.RecordNumber</dd>
+
+                        <dt class="col-sm-4">Veterinario:</dt>
+                        <dd class="col-sm-8">@Model.AttendingVeterinarian.User.FirstName @Model.AttendingVeterinarian.User.LastName</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <form asp-action="Delete">
+                <input type="hidden" asp-for="ConsultationId" />
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <a asp-action="Index" class="btn btn-secondary me-md-2">Cancelar</a>
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

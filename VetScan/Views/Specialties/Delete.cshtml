@@ -1,0 +1,39 @@
+﻿@model VetScan.Models.Specialty
+@{
+    ViewData["Title"] = "Desactivar Especialidad";
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-danger text-white">
+            <h2 class="mb-0">@ViewData["Title"]</h2>
+        </div>
+        <div class="card-body">
+            <h3>¿Estás seguro que deseas desactivar esta especialidad?</h3>
+
+            <div class="alert alert-warning mt-4">
+                <strong>¡Advertencia!</strong> Esta acción no eliminará la especialidad permanentemente, solo la marcará como inactiva.
+            </div>
+
+            <div class="mt-4">
+                <h4>Detalles de la Especialidad</h4>
+                <dl class="row">
+                    <dt class="col-sm-3">Nombre:</dt>
+                    <dd class="col-sm-9">@Model.SpecialtyName</dd>
+
+                    <dt class="col-sm-3">Descripción:</dt>
+                    <dd class="col-sm-9">@(Model.Description ?? "No disponible")</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="card-footer">
+            <form asp-action="Delete">
+                <input type="hidden" asp-for="SpecialtyId" />
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-danger">Desactivar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

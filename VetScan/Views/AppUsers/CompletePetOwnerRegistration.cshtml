@@ -1,0 +1,99 @@
+﻿@model VetScan.ViewModels.PetOwnerFormViewModel
+
+@{
+    ViewData["Title"] = "Completar Registro de Dueño de Mascota";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="text-center mb-0">@ViewData["Title"]</h2>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CompletePetOwnerRegistration" method="post">
+                        <input type="hidden" name="userId" value="@ViewBag.UserId" />
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre</label>
+                                <input class="form-control" value="@Model.FirstName @Model.LastName" disabled />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Correo</label>
+                                <input class="form-control" value="@Model.Email" disabled />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Address" class="form-label">Dirección</label>
+                            <input asp-for="Address" class="form-control" placeholder="Ej: Calle 123, Barrio XYZ" />
+                            <span asp-validation-for="Address" class="text-danger"></span>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label asp-for="City" class="form-label">Ciudad</label>
+                                <input asp-for="City" class="form-control" placeholder="Ej: San José" />
+                                <span asp-validation-for="City" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="State" class="form-label">Provincia/Estado</label>
+                                <input asp-for="State" class="form-control" placeholder="Ej: San José" />
+                                <span asp-validation-for="State" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="PostalCode" class="form-label">Código Postal</label>
+                                <input asp-for="PostalCode" class="form-control" placeholder="Ej: 10101" />
+                                <span asp-validation-for="PostalCode" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Country" class="form-label">País</label>
+                            <input asp-for="Country" class="form-control" />
+                            <span asp-validation-for="Country" class="text-danger"></span>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="EmergencyContactName" class="form-label">Contacto de Emergencia</label>
+                                <input asp-for="EmergencyContactName" class="form-control" placeholder="Nombre completo" />
+                                <span asp-validation-for="EmergencyContactName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="EmergencyContactPhone" class="form-label">Teléfono de Emergencia</label>
+                                <input asp-for="EmergencyContactPhone" class="form-control" placeholder="Ej: 8888-8888" />
+                                <span asp-validation-for="EmergencyContactPhone" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="PreferredContactMethod" class="form-label">Método de Contacto Preferido</label>
+                            <select asp-for="PreferredContactMethod" class="form-select">
+                                <option value="Email">Email</option>
+                                <option value="Teléfono">Teléfono</option>
+                                <option value="SMS">SMS</option>
+                                <option value="WhatsApp">WhatsApp</option>
+                            </select>
+                            <span asp-validation-for="PreferredContactMethod" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Completar Registro</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

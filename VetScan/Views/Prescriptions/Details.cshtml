@@ -1,0 +1,109 @@
+﻿@model VetScan.ViewModels.PrescriptionListViewModel
+@{
+    ViewData["Title"] = "Detalles de Prescripción";
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">Prescripción del @Model.FormattedDate</h2>
+                <div>
+                    <a asp-action="Edit" asp-route-id="@Model.PrescriptionId" class="btn btn-sm btn-warning">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                    <a asp-action="Index" class="btn btn-sm btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Fecha:</dt>
+                        <dd class="col-sm-8">@Model.FormattedDate</dd>
+
+                        <dt class="col-sm-4">Mascota:</dt>
+                        <dd class="col-sm-8">@Model.PetName</dd>
+
+                        <dt class="col-sm-4">Consulta:</dt>
+                        <dd class="col-sm-8">@Model.ConsultationInfo</dd>
+
+                        <dt class="col-sm-4">Medicamento:</dt>
+                        <dd class="col-sm-8">@Model.MedicationName</dd>
+                    </dl>
+                </div>
+
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Dosis:</dt>
+                        <dd class="col-sm-8">@Model.Dosage</dd>
+
+                        <dt class="col-sm-4">Frecuencia:</dt>
+                        <dd class="col-sm-8">@Model.Frequency</dd>
+
+                        <dt class="col-sm-4">Duración:</dt>
+                        <dd class="col-sm-8">@(ViewBag.Duration ?? "N/A")</dd>
+
+                        <dt class="col-sm-4">Estado:</dt>
+                        <dd class="col-sm-8"><span class="@Model.StatusClass">@Model.Status</span></dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Cantidad:</dt>
+                        <dd class="col-sm-8">@(ViewBag.Quantity ?? "N/A")</dd>
+
+                        <dt class="col-sm-4">Reabastecimientos:</dt>
+                        <dd class="col-sm-8">@(ViewBag.Refills ?? "0")</dd>
+                    </dl>
+                </div>
+
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Fecha de Inicio:</dt>
+                        <dd class="col-sm-8">@(ViewBag.StartDate ?? "N/A")</dd>
+
+                        <dt class="col-sm-4">Fecha de Fin:</dt>
+                        <dd class="col-sm-8">@(ViewBag.EndDate ?? "N/A")</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <h4>Instrucciones</h4>
+                <div class="card">
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(ViewBag.Instructions))
+                        {
+                            <p class="card-text">@ViewBag.Instructions</p>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No hay instrucciones adicionales</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <div class="d-flex justify-content-between">
+                <small class="text-muted">
+                    ID: @Model.PrescriptionId | Creado: @Model.FormattedDate
+                </small>
+                <div>
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-list"></i> Volver al listado
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

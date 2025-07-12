@@ -1,0 +1,53 @@
+﻿@model VetScan.Models.UserRole
+@{
+    ViewData["Title"] = "Desactivar Rol";
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-danger text-white">
+            <h2 class="mb-0">@ViewData["Title"]</h2>
+        </div>
+        <div class="card-body">
+            <h3>¿Estás seguro que deseas desactivar este rol?</h3>
+
+            <div class="alert alert-warning mt-4">
+                <strong>¡Advertencia!</strong>
+                @if (Model.Users.Any())
+                {
+                    <span>Este rol tiene @Model.Users.Count usuarios asociados. No podrás desactivarlo si tiene usuarios asignados.</span>
+                }
+                else
+                {
+                    <span>Esta acción no eliminará el rol permanentemente, solo lo marcará como inactivo.</span>
+                }
+            </div>
+
+            <div class="mt-4">
+                <h4>Detalles del Rol</h4>
+                <dl class="row">
+                    <dt class="col-sm-3">Nombre:</dt>
+                    <dd class="col-sm-9">@Model.RoleName</dd>
+
+                    <dt class="col-sm-3">Descripción:</dt>
+                    <dd class="col-sm-9">@(Model.Description ?? "No disponible")</dd>
+
+                    <dt class="col-sm-3">Usuarios:</dt>
+                    <dd class="col-sm-9">@Model.Users.Count</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="card-footer">
+            <form asp-action="Delete">
+                <input type="hidden" asp-for="RoleId" />
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                    @if (!Model.Users.Any())
+                    {
+                        <button type="submit" class="btn btn-danger">Desactivar</button>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

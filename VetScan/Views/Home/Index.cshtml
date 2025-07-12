@@ -1,0 +1,211 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="container hero-content">
+        <h1 class="display-4 hero-title">Cuidando a tus mascotas con amor y profesionalismo</h1>
+        <p class="hero-subtitle">Servicios veterinarios de calidad para la salud y bienestar de tu compañero peludo</p>
+        <div class="hero-buttons">
+            <a asp-controller="Appointments" asp-action="Index" class="btn btn-primary btn-lg">Reservar Citas</a>
+            <a asp-controller="AppUsers" asp-action="Login" class="btn btn-outline-light btn-lg">Acceder al Sistema</a>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container features-section py-5">
+    <div class="row text-center">
+        <div class="col-md-4 feature-item">
+            <div class="feature-icon">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <h3>Citas en Línea</h3>
+            <p>Programa y gestiona citas de manera rápida y sencilla.</p>
+        </div>
+        <div class="col-md-4 feature-item">
+            <div class="feature-icon">
+                <i class="fas fa-file-medical"></i>
+            </div>
+            <h3>Historial Médico</h3>
+            <p>Accede al historial completo de tu mascota en cualquier momento.</p>
+        </div>
+        <div class="col-md-4 feature-item">
+            <div class="feature-icon">
+                <i class="fas fa-syringe"></i>
+            </div>
+            <h3>Control de Vacunas</h3>
+            <p>Mantén al día el calendario de vacunación de tu mascota.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Links Section -->
+<div class="quick-links-section py-4">
+    <div class="container">
+        <h2 class="text-center mb-4">Accesos Rápidos</h2>
+        <div class="row">
+            <div class="col-md-3 col-6 quick-link">
+                <a href="/Pets">
+                    <div class="quick-link-icon">
+                        <i class="fas fa-paw"></i>
+                    </div>
+                    <span>Mascotas</span>
+                </a>
+            </div>
+            <div class="col-md-3 col-6 quick-link">
+                <a href="/MedicalRecords">
+                    <div class="quick-link-icon">
+                        <i class="fas fa-notes-medical"></i>
+                    </div>
+                    <span>Expedientes</span>
+                </a>
+            </div>
+            <div class="col-md-3 col-6 quick-link">
+                <a href="/Medications">
+                    <div class="quick-link-icon">
+                        <i class="fas fa-pills"></i>
+                    </div>
+                    <span>Medicinas</span>
+                </a>
+            </div>
+            <div class="col-md-3 col-6 quick-link">
+                <a href="/Vaccines">
+                    <div class="quick-link-icon">
+                        <i class="fas fa-shield-virus"></i>
+                    </div>
+                    <span>Vacunas</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Emergency Section -->
+<div class="emergency-section py-5">
+    <div class="container text-center">
+        <h2><i class="fas fa-exclamation-triangle"></i> Emergencias Veterinarias</h2>
+        <p class="lead">Si tu mascota necesita atención inmediata, contáctanos ahora</p>
+        <a href="tel:+1234567890" class="btn btn-danger btn-lg">
+            <i class="fas fa-phone"></i> Llamar Ahora: (123) 456-7890
+        </a>
+    </div>
+</div>
+
+<style>
+    /* Hero Section Styles */
+    .hero-section {
+        background: url('https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') no-repeat center center;
+        background-size: cover;
+        color: white;
+        padding: 120px 0;
+        position: relative;
+        margin-bottom: 30px;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-title {
+        font-weight: 700;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .hero-subtitle {
+        font-size: 1.5rem;
+        margin-bottom: 30px;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .hero-buttons .btn {
+        margin: 0 10px;
+    }
+
+    /* Features Section Styles */
+    .features-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+
+    .feature-item {
+        padding: 20px;
+    }
+
+    .feature-icon {
+        font-size: 3rem;
+        color: #17a2b8;
+        margin-bottom: 15px;
+    }
+
+    /* Quick Links Section */
+    .quick-links-section {
+        background-color: #fff;
+        border-top: 1px solid #eee;
+        border-bottom: 1px solid #eee;
+    }
+
+    .quick-link {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+        .quick-link a {
+            color: #333;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+            .quick-link a:hover {
+                color: #17a2b8;
+            }
+
+    .quick-link-icon {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+
+    /* Emergency Section */
+    .emergency-section {
+        background-color: #f8d7da;
+        border-radius: 10px;
+    }
+
+        .emergency-section h2 {
+            color: #721c24;
+        }
+
+    /* Responsive Adjustments */
+    @@media (max-width: 768px) {
+        .hero-title {
+            font-size: 2rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+        }
+
+        .hero-buttons .btn {
+            display: block;
+            width: 80%;
+            margin: 10px auto;
+        }
+    }
+</style>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
