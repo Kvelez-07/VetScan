@@ -1,4 +1,12 @@
 ﻿// Controllers/VaccinesController.cs
+using iText.IO.Font.Constants;
+using iText.Kernel.Colors;
+using iText.Kernel.Font;
+using iText.Kernel.Geom;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.Layout.Properties;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VetScan.Data;
@@ -16,6 +24,99 @@ namespace VetScan.Controllers
         {
             _context = context;
             _logger = logger;
+        }
+
+        public async Task<IActionResult> ExportToPdf(string searchString)
+        {
+            // Obtener los datos (igual que en el Index)
+            var query = _context.Vaccines
+                .Include(v => v.Species)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(v =>
+                    v.VaccineName.Contains(searchString) ||
+                    (v.Manufacturer != null && v.Manufacturer.Contains(searchString)) ||
+                    (v.VaccineType != null && v.VaccineType.Contains(searchString)) ||
+                    (v.Species != null && v.Species.SpeciesName.Contains(searchString)));
+            }
+
+            var vaccines = await query
+                .OrderBy(v => v.VaccineName)
+                .Select(v => new VaccineListViewModel
+                {
+                    VaccineId = v.VaccineId,
+                    VaccineName = v.VaccineName,
+                    Manufacturer = v.Manufacturer,
+                    VaccineType = v.VaccineType,
+                    SpeciesName = v.Species != null ? v.Species.SpeciesName : "Todas",
+                    IsCore = v.IsCore,
+                    IsActive = v.IsActive,
+                    CreatedDate = v.CreatedDate
+                })
+                .ToListAsync();
+
+            // Configuración del PDF con iText 7
+            var memoryStream = new MemoryStream();
+            var writer = new PdfWriter(memoryStream);
+            var pdf = new PdfDocument(writer);
+            var document = new Document(pdf, PageSize.A4.Rotate());
+
+            // Fuentes
+            var headerFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+            var normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+
+            // Título
+            var title = new Paragraph("Reporte de Vacunas")
+                .SetFont(headerFont)
+                .SetFontSize(18)
+                .SetTextAlignment(TextAlignment.CENTER);
+            document.Add(title);
+
+            // Fecha
+            var date = new Paragraph($"Generado el: {DateTime.Now.ToString("dd/MM/yyyy HH:mm")}")
+                .SetFont(normalFont)
+                .SetFontSize(10)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginBottom(20);
+            document.Add(date);
+
+            // Crear tabla
+            var table = new Table(new float[] { 2, 2, 2, 2, 1, 1 }, true)
+                .SetWidth(UnitValue.CreatePercentValue(100));
+
+            // Encabezados de tabla
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Nombre").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Fabricante").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Tipo").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Especie").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Tipo").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Estado").SetFont(headerFont)));
+
+            // Datos de la tabla
+            foreach (var item in vaccines)
+            {
+                table.AddCell(new Cell().Add(new Paragraph(item.VaccineName).SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(item.Manufacturer ?? "N/A").SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(item.VaccineType ?? "N/A").SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(item.SpeciesName).SetFont(normalFont)));
+
+                var typeCell = new Cell().Add(new Paragraph(item.IsCore ? "Básica" : "Opcional").SetFont(normalFont));
+                typeCell.SetBackgroundColor(item.IsCore ? new DeviceRgb(13, 110, 253) : new DeviceRgb(108, 117, 125));
+                typeCell.SetFontColor(new DeviceRgb(255, 255, 255));
+                table.AddCell(typeCell);
+
+                var statusCell = new Cell().Add(new Paragraph(item.IsActive ? "Activa" : "Inactiva").SetFont(normalFont));
+                statusCell.SetBackgroundColor(item.IsActive ? new DeviceRgb(25, 135, 84) : new DeviceRgb(220, 53, 69));
+                statusCell.SetFontColor(new DeviceRgb(255, 255, 255));
+                table.AddCell(statusCell);
+            }
+
+            document.Add(table);
+            document.Close();
+
+            return File(memoryStream.ToArray(), "application/pdf", $"Vacunas_{DateTime.Now:yyyyMMddHHmmss}.pdf");
         }
 
         // GET: Vaccines
@@ -53,6 +154,144 @@ namespace VetScan.Controllers
 
             ViewData["CurrentFilter"] = searchString;
             return View(vaccines);
+        }
+
+        public async Task<IActionResult> ExportDetailsToPdf(int id)
+        {
+            var vaccine = await _context.Vaccines
+                .Include(v => v.Species)
+                .FirstOrDefaultAsync(v => v.VaccineId == id);
+
+            if (vaccine == null)
+            {
+                return NotFound();
+            }
+
+            // Configuración del PDF
+            var memoryStream = new MemoryStream();
+            var writer = new PdfWriter(memoryStream);
+            var pdf = new PdfDocument(writer);
+            var document = new Document(pdf, PageSize.A4);
+
+            // Fuentes
+            var headerFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+            var normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+            var boldFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+
+            // Título
+            var title = new Paragraph($"FICHA TÉCNICA DE VACUNA")
+                .SetFont(headerFont)
+                .SetFontSize(18)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginBottom(10);
+            document.Add(title);
+
+            // Subtítulo
+            var subtitle = new Paragraph(vaccine.VaccineName)
+                .SetFont(headerFont)
+                .SetFontSize(14)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginBottom(20);
+            document.Add(subtitle);
+
+            // Información básica
+            var infoTable = new Table(new float[] { 3, 7 })
+                .SetWidth(UnitValue.CreatePercentValue(100))
+                .SetMarginBottom(20);
+
+            infoTable.AddCell(CreateCell("Nombre:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell(vaccine.VaccineName, normalFont, TextAlignment.LEFT));
+
+            infoTable.AddCell(CreateCell("Fabricante:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell(vaccine.Manufacturer ?? "No especificado", normalFont, TextAlignment.LEFT));
+
+            infoTable.AddCell(CreateCell("Tipo de vacuna:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell(vaccine.VaccineType ?? "No especificado", normalFont, TextAlignment.LEFT));
+
+            infoTable.AddCell(CreateCell("Especie:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell(vaccine.Species?.SpeciesName ?? "Todas las especies", normalFont, TextAlignment.LEFT));
+
+            document.Add(infoTable);
+
+            // Características de la vacuna
+            var specsTitle = new Paragraph("CARACTERÍSTICAS")
+                .SetFont(headerFont)
+                .SetFontSize(14)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginBottom(10);
+            document.Add(specsTitle);
+
+            var specsTable = new Table(new float[] { 4, 6 })
+                .SetWidth(UnitValue.CreatePercentValue(80))
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetMarginBottom(20);
+
+            specsTable.AddCell(CreateCell("Tipo:", boldFont, TextAlignment.LEFT));
+            var typeCell = CreateCell(vaccine.IsCore ? "Vacuna básica" : "Vacuna opcional", normalFont, TextAlignment.LEFT);
+            typeCell.SetBackgroundColor(vaccine.IsCore ? new DeviceRgb(13, 110, 253) : new DeviceRgb(108, 117, 125));
+            typeCell.SetFontColor(DeviceRgb.WHITE);
+            specsTable.AddCell(typeCell);
+
+            specsTable.AddCell(CreateCell("Estado:", boldFont, TextAlignment.LEFT));
+            var statusCell = CreateCell(vaccine.IsActive ? "Activa" : "Inactiva", normalFont, TextAlignment.LEFT);
+            statusCell.SetBackgroundColor(vaccine.IsActive ? new DeviceRgb(25, 135, 84) : new DeviceRgb(220, 53, 69));
+            statusCell.SetFontColor(DeviceRgb.WHITE);
+            specsTable.AddCell(statusCell);
+
+            specsTable.AddCell(CreateCell("Edad recomendada:", boldFont, TextAlignment.LEFT));
+            specsTable.AddCell(CreateCell(vaccine.RecommendedAge ?? "No especificada", normalFont, TextAlignment.LEFT));
+
+            specsTable.AddCell(CreateCell("Intervalo de refuerzo:", boldFont, TextAlignment.LEFT));
+            specsTable.AddCell(CreateCell(
+                vaccine.BoosterInterval.HasValue ? $"{vaccine.BoosterInterval} días" : "No especificado",
+                normalFont, TextAlignment.LEFT));
+
+            document.Add(specsTable);
+
+            // Información adicional
+            var additionalInfo = new Paragraph("INFORMACIÓN ADICIONAL")
+                .SetFont(headerFont)
+                .SetFontSize(14)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginBottom(10);
+            document.Add(additionalInfo);
+
+            var infoList = new List()
+                .SetListSymbol(ListNumberingType.DECIMAL)
+                .SetMarginBottom(20);
+
+            infoList.Add(new ListItem("Fecha de creación: " + vaccine.CreatedDate.ToString("dd/MM/yyyy HH:mm")));
+
+            if (vaccine.Species != null)
+            {
+                infoList.Add(new ListItem($"Especie objetivo: {vaccine.Species.SpeciesName}"));
+            }
+            else
+            {
+                infoList.Add(new ListItem("Aplicable a todas las especies"));
+            }
+
+            document.Add(infoList);
+
+            // Pie de página
+            var footer = new Paragraph($"Documento generado el {DateTime.Now.ToString("dd/MM/yyyy HH:mm")} | ID: {vaccine.VaccineId}")
+                .SetFont(normalFont)
+                .SetFontSize(8)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetFontColor(DeviceRgb.BLACK);
+            document.Add(footer);
+
+            document.Close();
+            return File(memoryStream.ToArray(), "application/pdf",
+                $"Vacuna_{vaccine.VaccineName}_{DateTime.Now:yyyyMMdd}.pdf");
+        }
+
+        private Cell CreateCell(string text, PdfFont font, TextAlignment alignment)
+        {
+            return new Cell()
+                .Add(new Paragraph(text).SetFont(font))
+                .SetPadding(5)
+                .SetTextAlignment(alignment);
         }
 
         // GET: Vaccines/Details/5
