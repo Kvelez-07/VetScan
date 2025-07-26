@@ -1,4 +1,12 @@
 ﻿// Controllers/MedicalRecordsController.cs
+using iText.IO.Font.Constants;
+using iText.Kernel.Colors;
+using iText.Kernel.Font;
+using iText.Kernel.Geom;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.Layout.Properties;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VetScan.Data;
@@ -16,6 +24,92 @@ namespace VetScan.Controllers
         {
             _context = context;
             _logger = logger;
+        }
+
+        public async Task<IActionResult> ExportToPdf(string searchString)
+        {
+            // Obtener los datos (igual que en el Index)
+            IQueryable<MedicalRecord> baseQuery = _context.MedicalRecords
+                .Include(mr => mr.Pet)
+                .ThenInclude(p => p.PetOwner)
+                .ThenInclude(po => po.User);
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                baseQuery = baseQuery.Where(mr =>
+                    mr.RecordNumber.Contains(searchString) ||
+                    mr.Pet.PetName.Contains(searchString));
+            }
+
+            var medicalRecords = await baseQuery.OrderByDescending(mr => mr.CreationDate)
+                .Select(mr => new MedicalRecordListViewModel
+                {
+                    MedicalRecordId = mr.MedicalRecordId,
+                    RecordNumber = mr.RecordNumber,
+                    PetName = mr.Pet.PetName,
+                    PetId = mr.PetId,
+                    OwnerName = $"{mr.Pet.PetOwner.User.FirstName} {mr.Pet.PetOwner.User.LastName}",
+                    CreationDate = mr.CreationDate,
+                    Status = mr.Status
+                })
+                .ToListAsync();
+
+            // Configuración del PDF con iText 7
+            var memoryStream = new MemoryStream();
+            var writer = new PdfWriter(memoryStream);
+            var pdf = new PdfDocument(writer);
+            var document = new Document(pdf, PageSize.A4.Rotate());
+
+            // Fuentes
+            var headerFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+            var normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+
+            // Título
+            var title = new Paragraph("Reporte de Registros Médicos")
+                .SetFont(headerFont)
+                .SetFontSize(18)
+                .SetTextAlignment(TextAlignment.CENTER);
+            document.Add(title);
+
+            // Fecha
+            var date = new Paragraph($"Generado el: {DateTime.Now.ToString("dd/MM/yyyy HH:mm")}")
+                .SetFont(normalFont)
+                .SetFontSize(10)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginBottom(20);
+            document.Add(date);
+
+            // Crear tabla
+            var table = new Table(new float[] { 2, 2, 2, 2, 2 }, true)
+                .SetWidth(UnitValue.CreatePercentValue(100));
+
+            // Encabezados de tabla
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Número").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Mascota").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Dueño").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Fecha Creación").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Estado").SetFont(headerFont)));
+
+            // Datos de la tabla
+            foreach (var record in medicalRecords)
+            {
+                table.AddCell(new Cell().Add(new Paragraph(record.RecordNumber).SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(record.PetName).SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(record.OwnerName).SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(record.FormattedCreationDate).SetFont(normalFont)));
+
+                var statusCell = new Cell().Add(new Paragraph(record.Status).SetFont(normalFont));
+                statusCell.SetBackgroundColor(
+                    record.Status == "Active" ? new DeviceRgb(40, 167, 69) :
+                    new DeviceRgb(220, 53, 69));
+                statusCell.SetFontColor(new DeviceRgb(255, 255, 255));
+                table.AddCell(statusCell);
+            }
+
+            document.Add(table);
+            document.Close();
+
+            return File(memoryStream.ToArray(), "application/pdf", $"RegistrosMedicos_{DateTime.Now:yyyyMMddHHmmss}.pdf");
         }
 
         // GET: MedicalRecords
@@ -53,6 +147,99 @@ namespace VetScan.Controllers
 
             ViewData["CurrentFilter"] = searchString;
             return View(medicalRecords);
+        }
+
+        public async Task<IActionResult> ExportDetailsToPdf(int id)
+        {
+            var medicalRecord = await _context.MedicalRecords
+                .Include(mr => mr.Pet)
+                .ThenInclude(p => p.PetOwner)
+                .ThenInclude(po => po.User)
+                .FirstOrDefaultAsync(mr => mr.MedicalRecordId == id);
+
+            if (medicalRecord == null)
+            {
+                return NotFound();
+            }
+
+            // Configuración del PDF
+            var memoryStream = new MemoryStream();
+            var writer = new PdfWriter(memoryStream);
+            var pdf = new PdfDocument(writer);
+            var document = new Document(pdf, PageSize.A4);
+
+            // Fuentes
+            var headerFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+            var normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+            var boldFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+
+            // Título
+            var title = new Paragraph($"Registro Médico: {medicalRecord.RecordNumber}")
+                .SetFont(headerFont)
+                .SetFontSize(16)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginBottom(20);
+            document.Add(title);
+
+            // Información básica
+            var infoTable = new Table(new float[] { 3, 7 })
+                .SetWidth(UnitValue.CreatePercentValue(100))
+                .SetMarginBottom(20);
+
+            infoTable.AddCell(CreateCell("Número de Registro:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell(medicalRecord.RecordNumber, normalFont, TextAlignment.LEFT));
+
+            infoTable.AddCell(CreateCell("Fecha de Creación:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell(medicalRecord.CreationDate.ToString("dd/MM/yyyy HH:mm"), normalFont, TextAlignment.LEFT));
+
+            infoTable.AddCell(CreateCell("Estado:", boldFont, TextAlignment.LEFT));
+            var statusCell = CreateCell(medicalRecord.Status, normalFont, TextAlignment.LEFT);
+            statusCell.SetBackgroundColor(medicalRecord.Status == "Active" ?
+                new DeviceRgb(40, 167, 69) : new DeviceRgb(220, 53, 69));
+            statusCell.SetFontColor(DeviceRgb.WHITE);
+            infoTable.AddCell(statusCell);
+
+            infoTable.AddCell(CreateCell("Mascota:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell($"{medicalRecord.Pet.PetName} ({medicalRecord.Pet.PetCode})", normalFont, TextAlignment.LEFT));
+
+            infoTable.AddCell(CreateCell("Dueño:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell(
+                $"{medicalRecord.Pet.PetOwner.User.FirstName} {medicalRecord.Pet.PetOwner.User.LastName}",
+                normalFont, TextAlignment.LEFT));
+
+            document.Add(infoTable);
+
+            // Notas generales
+            var notesTitle = new Paragraph("Notas Generales")
+                .SetFont(headerFont)
+                .SetFontSize(14)
+                .SetMarginBottom(10);
+            document.Add(notesTitle);
+
+            var notesContent = new Paragraph(string.IsNullOrEmpty(medicalRecord.GeneralNotes) ?
+                "No hay notas registradas" : medicalRecord.GeneralNotes)
+                .SetFont(normalFont)
+                .SetMarginBottom(20);
+            document.Add(notesContent);
+
+            // Pie de página
+            var footer = new Paragraph($"Generado el {DateTime.Now.ToString("dd/MM/yyyy HH:mm")} | ID: {medicalRecord.MedicalRecordId}")
+                .SetFont(normalFont)
+                .SetFontSize(8)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetFontColor(DeviceRgb.BLACK);
+            document.Add(footer);
+
+            document.Close();
+            return File(memoryStream.ToArray(), "application/pdf", $"RegistroMedico_{medicalRecord.RecordNumber}_{DateTime.Now:yyyyMMdd}.pdf");
+        }
+
+        private Cell CreateCell(string text, PdfFont font, TextAlignment alignment)
+        {
+            return new Cell()
+                .Add(new Paragraph(text).SetFont(font))
+                .SetPadding(5)
+                .SetTextAlignment(alignment);
         }
 
         [HttpGet]

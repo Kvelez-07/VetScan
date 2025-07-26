@@ -1,4 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using iText.IO.Font.Constants;
+using iText.Kernel.Colors;
+using iText.Kernel.Font;
+using iText.Kernel.Geom;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.Layout.Properties;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VetScan.Data;
 using VetScan.Models;
@@ -15,6 +23,333 @@ namespace VetScan.Controllers
         {
             _context = context;
             _logger = logger;
+        }
+
+        // GET: AppUsers
+        public async Task<IActionResult> Index(string searchString)
+        {
+            var query = _context.AppUsers
+                .Include(u => u.Role)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(u =>
+                    u.Username.Contains(searchString) ||
+                    u.FirstName.Contains(searchString) ||
+                    u.LastName.Contains(searchString) ||
+                    u.Email.Contains(searchString) ||
+                    (u.PhoneNumber != null && u.PhoneNumber.Contains(searchString)));
+            }
+
+            var users = await query
+                .OrderBy(u => u.LastName)
+                .ThenBy(u => u.FirstName)
+                .Select(u => new AppUsersListViewModel
+                {
+                    UserId = u.UserId,
+                    Username = u.Username,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    Email = u.Email,
+                    PhoneNumber = u.PhoneNumber,
+                    RoleName = u.Role.RoleName
+                })
+                .ToListAsync();
+
+            ViewData["CurrentFilter"] = searchString;
+            return View(users);
+        }
+
+        public async Task<IActionResult> ExportToPdf(string searchString)
+        {
+            var query = _context.AppUsers
+                .Include(u => u.Role)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(u =>
+                    u.Username.Contains(searchString) ||
+                    u.FirstName.Contains(searchString) ||
+                    u.LastName.Contains(searchString) ||
+                    u.Email.Contains(searchString) ||
+                    (u.PhoneNumber != null && u.PhoneNumber.Contains(searchString)));
+            }
+
+            var users = await query
+                .OrderBy(u => u.LastName)
+                .ThenBy(u => u.FirstName)
+                .Select(u => new AppUsersListViewModel
+                {
+                    UserId = u.UserId,
+                    Username = u.Username,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    Email = u.Email,
+                    PhoneNumber = u.PhoneNumber,
+                    RoleName = u.Role.RoleName
+                })
+                .ToListAsync();
+
+            // Configuración del PDF
+            var memoryStream = new MemoryStream();
+            var writer = new PdfWriter(memoryStream);
+            var pdf = new PdfDocument(writer);
+            var document = new Document(pdf, PageSize.A4.Rotate());
+
+            // Fuentes
+            var headerFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+            var normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+
+            // Título
+            var title = new Paragraph("Reporte de Usuarios")
+                .SetFont(headerFont)
+                .SetFontSize(18)
+                .SetTextAlignment(TextAlignment.CENTER);
+            document.Add(title);
+
+            // Fecha
+            var date = new Paragraph($"Generado el: {DateTime.Now.ToString("dd/MM/yyyy HH:mm")}")
+                .SetFont(normalFont)
+                .SetFontSize(10)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginBottom(20);
+            document.Add(date);
+
+            // Crear tabla
+            var table = new Table(new float[] { 2, 2, 2, 2, 2, 1 }, true)
+                .SetWidth(UnitValue.CreatePercentValue(100));
+
+            // Encabezados de tabla
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Usuario").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Nombre").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Correo").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Rol").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Teléfono").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("ID").SetFont(headerFont)));
+
+            // Datos de la tabla
+            foreach (var item in users)
+            {
+                table.AddCell(new Cell().Add(new Paragraph(item.Username).SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph($"{item.FirstName} {item.LastName}").SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(item.Email).SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(item.RoleName).SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(item.PhoneNumber ?? "N/A").SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(item.UserId.ToString()).SetFont(normalFont)));
+            }
+
+            document.Add(table);
+            document.Close();
+
+            return File(memoryStream.ToArray(), "application/pdf", $"Usuarios_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+        }
+
+        public async Task<IActionResult> ExportDetailsToPdf(int id)
+        {
+            var user = await _context.AppUsers
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.UserId == id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // Configuración del PDF
+            var memoryStream = new MemoryStream();
+            var writer = new PdfWriter(memoryStream);
+            var pdf = new PdfDocument(writer);
+            var document = new Document(pdf, PageSize.A4);
+
+            // Fuentes
+            var headerFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+            var normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+            var boldFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+
+            // Título
+            var title = new Paragraph("FICHA DE USUARIO")
+                .SetFont(headerFont)
+                .SetFontSize(18)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginBottom(10);
+            document.Add(title);
+
+            // Información básica
+            var infoTable = new Table(new float[] { 3, 7 })
+                .SetWidth(UnitValue.CreatePercentValue(100))
+                .SetMarginBottom(20);
+
+            infoTable.AddCell(CreateCell("Usuario:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell(user.Username, normalFont, TextAlignment.LEFT));
+
+            infoTable.AddCell(CreateCell("Nombre completo:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell($"{user.FirstName} {user.LastName}", normalFont, TextAlignment.LEFT));
+
+            infoTable.AddCell(CreateCell("Correo electrónico:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell(user.Email, normalFont, TextAlignment.LEFT));
+
+            infoTable.AddCell(CreateCell("Rol:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell(user.Role.RoleName, normalFont, TextAlignment.LEFT));
+
+            infoTable.AddCell(CreateCell("Teléfono:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell(user.PhoneNumber ?? "N/A", normalFont, TextAlignment.LEFT));
+
+            document.Add(infoTable);
+
+            // Pie de página
+            var footer = new Paragraph($"Documento generado el {DateTime.Now.ToString("dd/MM/yyyy HH:mm")} | ID: {user.UserId}")
+                .SetFont(normalFont)
+                .SetFontSize(8)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetFontColor(DeviceRgb.BLACK);
+            document.Add(footer);
+
+            document.Close();
+            return File(memoryStream.ToArray(), "application/pdf",
+                $"Usuario_{user.Username}_{DateTime.Now:yyyyMMdd}.pdf");
+        }
+
+        private Cell CreateCell(string text, PdfFont font, TextAlignment alignment)
+        {
+            return new Cell()
+                .Add(new Paragraph(text).SetFont(font))
+                .SetPadding(5)
+                .SetTextAlignment(alignment);
+        }
+
+        // GET: AppUsers/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var user = await _context.AppUsers
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.UserId == id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var viewModel = new AppUsersListViewModel
+            {
+                UserId = user.UserId,
+                Username = user.Username,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                RoleName = user.Role.RoleName
+            };
+
+            return View(viewModel);
+        }
+
+        // GET: AppUsers/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var user = await _context.AppUsers.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var viewModel = new AppUsersFormViewModel
+            {
+                UserId = user.UserId,
+                Username = user.Username,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                PhoneNumber = user.PhoneNumber,
+                RoleId = user.RoleId,
+                AvailableRoles = await _context.UserRoles.ToListAsync()
+            };
+
+            return View(viewModel);
+        }
+
+        // POST: AppUsers/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, AppUsersFormViewModel model)
+        {
+            if (id != model.UserId)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var user = await _context.AppUsers.FindAsync(id);
+                    if (user == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Actualizar propiedades editables
+                    user.Username = model.Username;
+                    user.Email = model.Email;
+                    user.FirstName = model.FirstName;
+                    user.LastName = model.LastName;
+                    user.PhoneNumber = model.PhoneNumber;
+                    user.RoleId = model.RoleId;
+
+                    _context.Update(user);
+                    await _context.SaveChangesAsync();
+
+                    TempData["SuccessMessage"] = "Usuario actualizado correctamente";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (DbUpdateException ex)
+                {
+                    _logger.LogError(ex, "Error al actualizar usuario");
+                    ModelState.AddModelError("", "Error al actualizar. Intente nuevamente.");
+                }
+            }
+
+            // Recargar roles si hay error
+            model.AvailableRoles = await _context.UserRoles.ToListAsync();
+            return View(model);
+        }
+
+        // POST: AppUsers/Delete/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var user = await _context.AppUsers.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                _context.AppUsers.Remove(user);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Usuario eliminado correctamente";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Error al eliminar usuario");
+                TempData["ErrorMessage"] = "Error al eliminar el usuario";
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: /AppUsers/Login

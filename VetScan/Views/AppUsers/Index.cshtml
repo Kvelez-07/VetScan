@@ -1,6 +1,6 @@
-﻿@model IEnumerable<VetScan.ViewModels.VitalSignListViewModel>
+﻿@model IEnumerable<VetScan.ViewModels.AppUsersListViewModel>
 @{
-    ViewData["Title"] = "Signos Vitales";
+    ViewData["Title"] = "Usuarios";
 }
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
@@ -12,8 +12,8 @@
             <a asp-action="ExportToPdf" asp-route-searchString="@ViewData["CurrentFilter"]" class="btn btn-danger me-2">
                 <i class="bi bi-file-earmark-pdf"></i> Exportar a PDF
             </a>
-            <a asp-action="Create" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> Nuevo Registro
+            <a asp-controller="AppUsers" asp-action="SignUp" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Nuevo Usuario
             </a>
         </div>
     </div>
@@ -26,12 +26,20 @@
         </div>
     }
 
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
     <div class="card mb-3">
         <div class="card-body">
             <form asp-action="Index" method="get" class="row g-2">
                 <div class="col-md-8">
                     <input type="text" class="form-control" name="searchString"
-                           value="@ViewData["CurrentFilter"]" placeholder="Buscar por mascota...">
+                           value="@ViewData["CurrentFilter"]" placeholder="Buscar por nombre, usuario, correo o teléfono...">
                 </div>
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-primary w-100">
@@ -53,14 +61,11 @@
                 <table class="table table-striped table-hover">
                     <thead class="table-dark">
                         <tr>
-                            <th>Fecha</th>
-                            <th>Mascota</th>
-                            <th>Consulta</th>
-                            <th>Temperatura</th>
-                            <th>Frec. Cardíaca</th>
-                            <th>Frec. Respiratoria</th>
-                            <th>Peso</th>
-                            <th>Presión</th>
+                            <th>Usuario</th>
+                            <th>Nombre</th>
+                            <th>Correo</th>
+                            <th>Rol</th>
+                            <th>Teléfono</th>
                             <th class="text-end">Acciones</th>
                         </tr>
                     </thead>
@@ -70,29 +75,26 @@
                             @foreach (var item in Model)
                             {
                                 <tr>
-                                    <td>@item.FormattedDate</td>
-                                    <td>@item.PetName</td>
-                                    <td>@item.ConsultationInfo</td>
-                                    <td>@item.FormattedTemperature</td>
-                                    <td>@item.FormattedHeartRate</td>
-                                    <td>@item.FormattedRespiratoryRate</td>
-                                    <td>@item.FormattedWeight</td>
-                                    <td>@item.BloodPressure</td>
+                                    <td>@item.Username</td>
+                                    <td>@item.FullName</td>
+                                    <td>@item.Email</td>
+                                    <td>@item.RoleName</td>
+                                    <td>@(item.PhoneNumber ?? "N/A")</td>
                                     <td class="text-end">
                                         <div class="d-flex gap-1 justify-content-end">
-                                            <a asp-action="Details" asp-route-id="@item.VitalSignId"
+                                            <a asp-action="Details" asp-route-id="@item.UserId"
                                                class="btn btn-sm btn-outline-primary" title="Detalles">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <a asp-action="Edit" asp-route-id="@item.VitalSignId"
+                                            <a asp-action="Edit" asp-route-id="@item.UserId"
                                                class="btn btn-sm btn-outline-warning" title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                             <form asp-action="Delete" method="post" class="d-inline">
-                                                <input type="hidden" name="id" value="@item.VitalSignId" />
+                                                <input type="hidden" name="id" value="@item.UserId" />
                                                 <button type="submit" class="btn btn-sm btn-outline-danger"
                                                         title="Eliminar"
-                                                        onclick="return confirm('¿Eliminar este registro de signos vitales?')">
+                                                        onclick="return confirm('¿Eliminar este usuario?')">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
@@ -104,7 +106,7 @@
                         else
                         {
                             <tr>
-                                <td colspan="9" class="text-center">No se encontraron registros de signos vitales.</td>
+                                <td colspan="6" class="text-center">No se encontraron usuarios.</td>
                             </tr>
                         }
                     </tbody>

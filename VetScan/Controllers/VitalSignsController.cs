@@ -1,4 +1,12 @@
 ﻿// Controllers/VitalSignsController.cs
+using iText.IO.Font.Constants;
+using iText.Kernel.Colors;
+using iText.Kernel.Font;
+using iText.Kernel.Geom;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.Layout.Properties;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VetScan.Data;
@@ -16,6 +24,100 @@ namespace VetScan.Controllers
         {
             _context = context;
             _logger = logger;
+        }
+
+        public async Task<IActionResult> ExportToPdf(string searchString)
+        {
+            // Obtener los datos (igual que en el Index)
+            var query = _context.VitalSigns
+                .Include(vs => vs.Consultation)
+                    .ThenInclude(c => c.MedicalRecord)
+                        .ThenInclude(mr => mr.Pet)
+                .Include(vs => vs.Consultation)
+                    .ThenInclude(c => c.AttendingVeterinarian)
+                        .ThenInclude(v => v.User)
+                .OrderByDescending(vs => vs.RecordedDate)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(vs =>
+                    vs.Consultation.MedicalRecord.Pet.PetName.Contains(searchString));
+            }
+
+            var vitalSigns = await query
+                .Select(vs => new VitalSignListViewModel
+                {
+                    VitalSignId = vs.VitalSignId,
+                    ConsultationId = vs.ConsultationId,
+                    ConsultationInfo = $"Consulta del {vs.Consultation.ConsultationDate:dd/MM/yyyy}",
+                    PetName = vs.Consultation.MedicalRecord.Pet.PetName,
+                    RecordedDate = vs.RecordedDate,
+                    Temperature = vs.Temperature,
+                    HeartRate = vs.HeartRate,
+                    RespiratoryRate = vs.RespiratoryRate,
+                    Weight = vs.Weight,
+                    BloodPressure = vs.BloodPressureSystolic.HasValue && vs.BloodPressureDiastolic.HasValue ?
+                        $"{vs.BloodPressureSystolic}/{vs.BloodPressureDiastolic}" : "N/A"
+                })
+                .ToListAsync();
+
+            // Configuración del PDF con iText 7
+            var memoryStream = new MemoryStream();
+            var writer = new PdfWriter(memoryStream);
+            var pdf = new PdfDocument(writer);
+            var document = new Document(pdf, PageSize.A4.Rotate());
+
+            // Fuentes
+            var headerFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+            var normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+
+            // Título
+            var title = new Paragraph("Reporte de Signos Vitales")
+                .SetFont(headerFont)
+                .SetFontSize(18)
+                .SetTextAlignment(TextAlignment.CENTER);
+            document.Add(title);
+
+            // Fecha
+            var date = new Paragraph($"Generado el: {DateTime.Now.ToString("dd/MM/yyyy HH:mm")}")
+                .SetFont(normalFont)
+                .SetFontSize(10)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginBottom(20);
+            document.Add(date);
+
+            // Crear tabla
+            var table = new Table(new float[] { 2, 2, 2, 1, 1, 1, 1, 1 }, true)
+                .SetWidth(UnitValue.CreatePercentValue(100));
+
+            // Encabezados de tabla
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Fecha").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Mascota").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Consulta").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Temp (°C)").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Cardíaca (lpm)").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Resp. (rpm)").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Peso (kg)").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Presión").SetFont(headerFont)));
+
+            // Datos de la tabla
+            foreach (var item in vitalSigns)
+            {
+                table.AddCell(new Cell().Add(new Paragraph(item.FormattedDate).SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(item.PetName).SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(item.ConsultationInfo).SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(item.FormattedTemperature).SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(item.FormattedHeartRate).SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(item.FormattedRespiratoryRate).SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(item.FormattedWeight).SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(item.BloodPressure).SetFont(normalFont)));
+            }
+
+            document.Add(table);
+            document.Close();
+
+            return File(memoryStream.ToArray(), "application/pdf", $"SignosVitales_{DateTime.Now:yyyyMMddHHmmss}.pdf");
         }
 
         public async Task<IActionResult> Index(string searchString)
@@ -57,6 +159,129 @@ namespace VetScan.Controllers
 
             ViewData["CurrentFilter"] = searchString;
             return View(vitalSigns);
+        }
+
+        public async Task<IActionResult> ExportDetailsToPdf(int id)
+        {
+            var vitalSign = await _context.VitalSigns
+                .Include(vs => vs.Consultation)
+                    .ThenInclude(c => c.MedicalRecord)
+                        .ThenInclude(mr => mr.Pet)
+                .Include(vs => vs.Consultation)
+                    .ThenInclude(c => c.AttendingVeterinarian)
+                        .ThenInclude(v => v.User)
+                .FirstOrDefaultAsync(vs => vs.VitalSignId == id);
+
+            if (vitalSign == null)
+            {
+                return NotFound();
+            }
+
+            // Configuración del PDF
+            var memoryStream = new MemoryStream();
+            var writer = new PdfWriter(memoryStream);
+            var pdf = new PdfDocument(writer);
+            var document = new Document(pdf, PageSize.A4);
+
+            // Fuentes
+            var headerFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+            var normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+            var boldFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+
+            // Título
+            var title = new Paragraph($"Signos Vitales - {vitalSign.RecordedDate:dd/MM/yyyy HH:mm}")
+                .SetFont(headerFont)
+                .SetFontSize(16)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginBottom(20);
+            document.Add(title);
+
+            // Información básica
+            var infoTable = new Table(new float[] { 3, 7 })
+                .SetWidth(UnitValue.CreatePercentValue(100))
+                .SetMarginBottom(20);
+
+            infoTable.AddCell(CreateCell("Fecha:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell(vitalSign.RecordedDate.ToString("dd/MM/yyyy HH:mm"), normalFont, TextAlignment.LEFT));
+
+            infoTable.AddCell(CreateCell("Mascota:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell(vitalSign.Consultation.MedicalRecord.Pet.PetName, normalFont, TextAlignment.LEFT));
+
+            infoTable.AddCell(CreateCell("Consulta:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell(
+                $"Del {vitalSign.Consultation.ConsultationDate:dd/MM/yyyy} con {vitalSign.Consultation.AttendingVeterinarian.User.FirstName} {vitalSign.Consultation.AttendingVeterinarian.User.LastName}",
+                normalFont, TextAlignment.LEFT));
+
+            document.Add(infoTable);
+
+            // Signos vitales
+            var signsTitle = new Paragraph("Mediciones")
+                .SetFont(headerFont)
+                .SetFontSize(14)
+                .SetMarginBottom(10);
+            document.Add(signsTitle);
+
+            var signsTable = new Table(new float[] { 4, 6 })
+                .SetWidth(UnitValue.CreatePercentValue(80))
+                .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                .SetMarginBottom(20);
+
+            signsTable.AddCell(CreateCell("Temperatura:", boldFont, TextAlignment.LEFT));
+            signsTable.AddCell(CreateCell($"{vitalSign.Temperature} °C", normalFont, TextAlignment.LEFT));
+
+            signsTable.AddCell(CreateCell("Frecuencia Cardíaca:", boldFont, TextAlignment.LEFT));
+            signsTable.AddCell(CreateCell($"{vitalSign.HeartRate} lpm", normalFont, TextAlignment.LEFT));
+
+            signsTable.AddCell(CreateCell("Frecuencia Respiratoria:", boldFont, TextAlignment.LEFT));
+            signsTable.AddCell(CreateCell($"{vitalSign.RespiratoryRate} rpm", normalFont, TextAlignment.LEFT));
+
+            signsTable.AddCell(CreateCell("Peso:", boldFont, TextAlignment.LEFT));
+            signsTable.AddCell(CreateCell($"{vitalSign.Weight} kg", normalFont, TextAlignment.LEFT));
+
+            if (vitalSign.BloodPressureSystolic.HasValue && vitalSign.BloodPressureDiastolic.HasValue)
+            {
+                signsTable.AddCell(CreateCell("Presión Arterial:", boldFont, TextAlignment.LEFT));
+                signsTable.AddCell(CreateCell(
+                    $"{vitalSign.BloodPressureSystolic}/{vitalSign.BloodPressureDiastolic} mmHg",
+                    normalFont, TextAlignment.LEFT));
+            }
+
+            document.Add(signsTable);
+
+            // Notas adicionales
+            if (!string.IsNullOrEmpty(vitalSign.Notes))
+            {
+                var notesTitle = new Paragraph("Notas Adicionales")
+                    .SetFont(headerFont)
+                    .SetFontSize(14)
+                    .SetMarginBottom(10);
+                document.Add(notesTitle);
+
+                var notesContent = new Paragraph(vitalSign.Notes)
+                    .SetFont(normalFont)
+                    .SetMarginBottom(20);
+                document.Add(notesContent);
+            }
+
+            // Pie de página
+            var footer = new Paragraph($"Generado el {DateTime.Now.ToString("dd/MM/yyyy HH:mm")} | ID: {vitalSign.VitalSignId}")
+                .SetFont(normalFont)
+                .SetFontSize(8)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetFontColor(DeviceRgb.BLACK);
+            document.Add(footer);
+
+            document.Close();
+            return File(memoryStream.ToArray(), "application/pdf",
+                $"SignosVitales_{vitalSign.Consultation.MedicalRecord.Pet.PetName}_{vitalSign.RecordedDate:yyyyMMddHHmm}.pdf");
+        }
+
+        private Cell CreateCell(string text, PdfFont font, TextAlignment alignment)
+        {
+            return new Cell()
+                .Add(new Paragraph(text).SetFont(font))
+                .SetPadding(5)
+                .SetTextAlignment(alignment);
         }
 
         // GET: VitalSigns/Details/5

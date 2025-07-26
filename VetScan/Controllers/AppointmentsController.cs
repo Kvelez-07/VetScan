@@ -1,4 +1,12 @@
 ﻿// AppointmentsController.cs
+using iText.IO.Font.Constants;
+using iText.Kernel.Colors;
+using iText.Kernel.Font;
+using iText.Kernel.Geom;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.Layout.Properties;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VetScan.Data;
@@ -18,6 +26,94 @@ namespace VetScan.Controllers
         {
             _context = context;
             _logger = logger;
+        }
+
+        public async Task<IActionResult> ExportToPdf(string searchString)
+        {
+            // Obtener los datos (igual que en el Index)
+            var query = _context.Appointments
+                .Include(a => a.Pet)
+                .Include(a => a.Veterinarian)
+                    .ThenInclude(v => v.User)
+                .OrderByDescending(a => a.AppointmentDate)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(a =>
+                    a.Pet.PetName.Contains(searchString) ||
+                    (a.Veterinarian.User.FirstName + " " + a.Veterinarian.User.LastName).Contains(searchString));
+            }
+
+            var appointments = await query
+                .Select(a => new AppointmentListViewModel
+                {
+                    AppointmentId = a.AppointmentId,
+                    PetName = a.Pet.PetName,
+                    VeterinarianName = $"{a.Veterinarian.User.FirstName} {a.Veterinarian.User.LastName}",
+                    AppointmentDate = a.AppointmentDate,
+                    AppointmentType = a.AppointmentType,
+                    Status = a.Status
+                })
+                .ToListAsync();
+
+            // Configuración del PDF con iText 7
+            var memoryStream = new MemoryStream();
+            var writer = new PdfWriter(memoryStream);
+            var pdf = new PdfDocument(writer);
+            var document = new Document(pdf, PageSize.A4.Rotate());
+
+            // Fuentes
+            var headerFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+            var normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+
+            // Título
+            var title = new Paragraph("Reporte de Citas Programadas")
+                .SetFont(headerFont)
+                .SetFontSize(18)
+                .SetTextAlignment(TextAlignment.CENTER);
+            document.Add(title);
+
+            // Fecha
+            var date = new Paragraph($"Generado el: {DateTime.Now.ToString("dd/MM/yyyy HH:mm")}")
+                .SetFont(normalFont)
+                .SetFontSize(10)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginBottom(20);
+            document.Add(date);
+
+            // Crear tabla
+            var table = new Table(new float[] { 2, 2, 2, 2, 2 }, true)
+                .SetWidth(UnitValue.CreatePercentValue(100));
+
+            // Encabezados de tabla
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Fecha y Hora").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Mascota").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Veterinario").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Tipo").SetFont(headerFont)));
+            table.AddHeaderCell(new Cell().Add(new Paragraph("Estado").SetFont(headerFont)));
+
+            // Datos de la tabla
+            foreach (var item in appointments)
+            {
+                table.AddCell(new Cell().Add(new Paragraph(item.FormattedDate).SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(item.PetName).SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(item.VeterinarianName).SetFont(normalFont)));
+                table.AddCell(new Cell().Add(new Paragraph(item.AppointmentType).SetFont(normalFont)));
+
+                var statusCell = new Cell().Add(new Paragraph(item.Status).SetFont(normalFont));
+                statusCell.SetBackgroundColor(
+                    item.Status == "Completed" ? new DeviceRgb(25, 135, 84) :
+                    item.Status == "Cancelled" ? new DeviceRgb(220, 53, 69) :
+                    new DeviceRgb(13, 110, 253));
+                statusCell.SetFontColor(new DeviceRgb(255, 255, 255));
+                table.AddCell(statusCell);
+            }
+
+            document.Add(table);
+            document.Close();
+
+            return File(memoryStream.ToArray(), "application/pdf", $"CitasProgramadas_{DateTime.Now:yyyyMMddHHmmss}.pdf");
         }
 
         // GET: Appointments
@@ -51,6 +147,160 @@ namespace VetScan.Controllers
 
             ViewData["CurrentFilter"] = searchString;
             return View(appointments);
+        }
+
+        public async Task<IActionResult> ExportDetailsToPdf(int id)
+        {
+            var appointment = await _context.Appointments
+                .Include(a => a.Pet)
+                .Include(a => a.Veterinarian)
+                    .ThenInclude(v => v.User)
+                .FirstOrDefaultAsync(a => a.AppointmentId == id);
+
+            if (appointment == null)
+            {
+                return NotFound();
+            }
+
+            // Configuración del PDF
+            var memoryStream = new MemoryStream();
+            var writer = new PdfWriter(memoryStream);
+            var pdf = new PdfDocument(writer);
+            var document = new Document(pdf, PageSize.A4);
+
+            // Fuentes
+            var headerFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+            var normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+            var boldFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+
+            // Título
+            var title = new Paragraph("COMPROBANTE DE CITA VETERINARIA")
+                .SetFont(headerFont)
+                .SetFontSize(18)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginBottom(10);
+            document.Add(title);
+
+            // Subtítulo
+            var subtitle = new Paragraph($"N° {appointment.AppointmentId}")
+                .SetFont(headerFont)
+                .SetFontSize(14)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginBottom(20);
+            document.Add(subtitle);
+
+            // Información básica
+            var infoTable = new Table(new float[] { 3, 7 })
+                .SetWidth(UnitValue.CreatePercentValue(100))
+                .SetMarginBottom(20);
+
+            infoTable.AddCell(CreateCell("Mascota:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell(appointment.Pet.PetName, normalFont, TextAlignment.LEFT));
+
+            infoTable.AddCell(CreateCell("Veterinario:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell(
+                $"{appointment.Veterinarian.User.FirstName} {appointment.Veterinarian.User.LastName}",
+                normalFont, TextAlignment.LEFT));
+
+            infoTable.AddCell(CreateCell("Fecha y Hora:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell(appointment.AppointmentDate.ToString("dd/MM/yyyy HH:mm"), normalFont, TextAlignment.LEFT));
+
+            infoTable.AddCell(CreateCell("Duración:", boldFont, TextAlignment.LEFT));
+            infoTable.AddCell(CreateCell($"{appointment.Duration} minutos", normalFont, TextAlignment.LEFT));
+
+            document.Add(infoTable);
+
+            // Detalles de la cita
+            var detailsTitle = new Paragraph("DETALLES DE LA CITA")
+                .SetFont(headerFont)
+                .SetFontSize(14)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginBottom(10);
+            document.Add(detailsTitle);
+
+            var detailsTable = new Table(new float[] { 3, 7 })
+                .SetWidth(UnitValue.CreatePercentValue(100))
+                .SetMarginBottom(20);
+
+            detailsTable.AddCell(CreateCell("Tipo:", boldFont, TextAlignment.LEFT));
+            detailsTable.AddCell(CreateCell(appointment.AppointmentType, normalFont, TextAlignment.LEFT));
+
+            detailsTable.AddCell(CreateCell("Estado:", boldFont, TextAlignment.LEFT));
+            var statusCell = CreateCell(appointment.Status, normalFont, TextAlignment.LEFT);
+            statusCell.SetBackgroundColor(
+                appointment.Status == "Completed" ? new DeviceRgb(25, 135, 84) :
+                appointment.Status == "Cancelled" ? new DeviceRgb(220, 53, 69) :
+                new DeviceRgb(13, 110, 253));
+            statusCell.SetFontColor(DeviceRgb.WHITE);
+            detailsTable.AddCell(statusCell);
+
+            detailsTable.AddCell(CreateCell("Costo Estimado:", boldFont, TextAlignment.LEFT));
+            detailsTable.AddCell(CreateCell(
+                appointment.EstimatedCost?.ToString("C") ?? "No especificado",
+                normalFont, TextAlignment.LEFT));
+
+            detailsTable.AddCell(CreateCell("Costo Real:", boldFont, TextAlignment.LEFT));
+            detailsTable.AddCell(CreateCell(
+                appointment.ActualCost?.ToString("C") ?? "No especificado",
+                normalFont, TextAlignment.LEFT));
+
+            document.Add(detailsTable);
+
+            // Razón de la visita
+            if (!string.IsNullOrEmpty(appointment.ReasonForVisit))
+            {
+                var reasonTitle = new Paragraph("RAZÓN DE LA VISITA")
+                    .SetFont(headerFont)
+                    .SetFontSize(14)
+                    .SetTextAlignment(TextAlignment.CENTER)
+                    .SetMarginBottom(10);
+                document.Add(reasonTitle);
+
+                var reasonContent = new Paragraph(appointment.ReasonForVisit)
+                    .SetFont(normalFont)
+                    .SetMarginBottom(20)
+                    .SetPaddingLeft(20)
+                    .SetPaddingRight(20);
+                document.Add(reasonContent);
+            }
+
+            // Notas adicionales
+            if (!string.IsNullOrEmpty(appointment.Notes))
+            {
+                var notesTitle = new Paragraph("NOTAS ADICIONALES")
+                    .SetFont(headerFont)
+                    .SetFontSize(14)
+                    .SetTextAlignment(TextAlignment.CENTER)
+                    .SetMarginBottom(10);
+                document.Add(notesTitle);
+
+                var notesContent = new Paragraph(appointment.Notes)
+                    .SetFont(normalFont)
+                    .SetMarginBottom(20)
+                    .SetPaddingLeft(20)
+                    .SetPaddingRight(20);
+                document.Add(notesContent);
+            }
+
+            // Pie de página
+            var footer = new Paragraph($"Documento generado el {DateTime.Now.ToString("dd/MM/yyyy HH:mm")} | ID: {appointment.AppointmentId}")
+                .SetFont(normalFont)
+                .SetFontSize(8)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetFontColor(DeviceRgb.BLACK);
+            document.Add(footer);
+
+            document.Close();
+            return File(memoryStream.ToArray(), "application/pdf",
+                $"Cita_{appointment.Pet.PetName}_{appointment.AppointmentDate:yyyyMMddHHmm}.pdf");
+        }
+
+        private Cell CreateCell(string text, PdfFont font, TextAlignment alignment)
+        {
+            return new Cell()
+                .Add(new Paragraph(text).SetFont(font))
+                .SetPadding(5)
+                .SetTextAlignment(alignment);
         }
 
         // GET: Appointments/Details/5
