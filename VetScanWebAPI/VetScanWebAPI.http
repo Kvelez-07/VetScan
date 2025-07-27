@@ -1,0 +1,6 @@
+@VetScanWebAPI_HostAddress = http://localhost:5244
+
+GET {{VetScanWebAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
