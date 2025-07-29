@@ -1,4 +1,5 @@
 ﻿// SpecialtiesController.cs
+using ClosedXML.Excel;
 using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
@@ -24,6 +25,80 @@ namespace VetScan.Controllers
         {
             _context = context;
             _logger = logger;
+        }
+
+        public async Task<IActionResult> ExportToExcel(string searchString)
+        {
+            var query = _context.Specialties
+                .Include(s => s.Veterinarians)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(s =>
+                    s.SpecialtyName.Contains(searchString) ||
+                    (s.Description != null && s.Description.Contains(searchString)));
+            }
+
+            var specialties = await query
+                .OrderBy(s => s.SpecialtyName)
+                .Select(s => new SpecialtyListViewModel
+                {
+                    SpecialtyId = s.SpecialtyId,
+                    SpecialtyName = s.SpecialtyName,
+                    Description = s.Description,
+                    IsActive = s.IsActive,
+                    VeterinarianCount = s.Veterinarians.Count
+                })
+                .ToListAsync();
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Especialidades");
+                var currentRow = 1;
+
+                // Encabezados
+                worksheet.Cell(currentRow, 1).Value = "Nombre";
+                worksheet.Cell(currentRow, 2).Value = "Descripción";
+                worksheet.Cell(currentRow, 3).Value = "Veterinarios";
+                worksheet.Cell(currentRow, 4).Value = "Estado";
+                worksheet.Cell(currentRow, 5).Value = "ID";
+
+                // Formato de encabezados
+                var headerRange = worksheet.Range(currentRow, 1, currentRow, 5);
+                headerRange.Style.Fill.BackgroundColor = XLColor.DarkBlue;
+                headerRange.Style.Font.FontColor = XLColor.White;
+                headerRange.Style.Font.Bold = true;
+
+                // Datos
+                foreach (var item in specialties)
+                {
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = item.SpecialtyName;
+                    worksheet.Cell(currentRow, 2).Value = item.Description ?? "N/A";
+                    worksheet.Cell(currentRow, 3).Value = item.VeterinarianCount;
+                    worksheet.Cell(currentRow, 4).Value = item.IsActive ? "Activa" : "Inactiva";
+                    worksheet.Cell(currentRow, 5).Value = item.SpecialtyId;
+
+                    // Color para estado
+                    var statusCell = worksheet.Cell(currentRow, 4);
+                    statusCell.Style.Fill.BackgroundColor = item.IsActive ?
+                        XLColor.Green : XLColor.Red;
+                    statusCell.Style.Font.FontColor = XLColor.White;
+                }
+
+                // Ajustar ancho de columnas
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        $"Especialidades_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                }
+            }
         }
 
         public async Task<IActionResult> ExportToPdf(string searchString)

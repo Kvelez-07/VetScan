@@ -1,4 +1,5 @@
 ﻿// AppointmentsController.cs
+using ClosedXML.Excel;
 using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
@@ -114,6 +115,86 @@ namespace VetScan.Controllers
             document.Close();
 
             return File(memoryStream.ToArray(), "application/pdf", $"CitasProgramadas_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+        }
+
+        public async Task<IActionResult> ExportToExcel(string searchString)
+        {
+            // Obtener los datos (igual que en el Index y ExportToPdf)
+            var query = _context.Appointments
+                .Include(a => a.Pet)
+                .Include(a => a.Veterinarian)
+                    .ThenInclude(v => v.User)
+                .OrderByDescending(a => a.AppointmentDate)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(a =>
+                    a.Pet.PetName.Contains(searchString) ||
+                    (a.Veterinarian.User.FirstName + " " + a.Veterinarian.User.LastName).Contains(searchString));
+            }
+
+            var appointments = await query
+                .Select(a => new AppointmentListViewModel
+                {
+                    AppointmentId = a.AppointmentId,
+                    PetName = a.Pet.PetName,
+                    VeterinarianName = $"{a.Veterinarian.User.FirstName} {a.Veterinarian.User.LastName}",
+                    AppointmentDate = a.AppointmentDate,
+                    AppointmentType = a.AppointmentType,
+                    Status = a.Status
+                })
+                .ToListAsync();
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Citas Programadas");
+                var currentRow = 1;
+
+                // Encabezados
+                worksheet.Cell(currentRow, 1).Value = "Fecha y Hora";
+                worksheet.Cell(currentRow, 2).Value = "Mascota";
+                worksheet.Cell(currentRow, 3).Value = "Veterinario";
+                worksheet.Cell(currentRow, 4).Value = "Tipo";
+                worksheet.Cell(currentRow, 5).Value = "Estado";
+
+                // Formato de encabezados
+                var headerRange = worksheet.Range(currentRow, 1, currentRow, 5);
+                headerRange.Style.Fill.BackgroundColor = XLColor.DarkBlue;
+                headerRange.Style.Font.FontColor = XLColor.White;
+                headerRange.Style.Font.Bold = true;
+
+                // Datos
+                foreach (var item in appointments)
+                {
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = item.FormattedDate;
+                    worksheet.Cell(currentRow, 2).Value = item.PetName;
+                    worksheet.Cell(currentRow, 3).Value = item.VeterinarianName;
+                    worksheet.Cell(currentRow, 4).Value = item.AppointmentType;
+                    worksheet.Cell(currentRow, 5).Value = item.Status;
+
+                    // Color para estado
+                    var statusCell = worksheet.Cell(currentRow, 5);
+                    statusCell.Style.Fill.BackgroundColor =
+                        item.Status == "Completed" ? XLColor.Green :
+                        item.Status == "Cancelled" ? XLColor.Red :
+                        XLColor.Blue;
+                    statusCell.Style.Font.FontColor = XLColor.White;
+                }
+
+                // Ajustar ancho de columnas
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        $"CitasProgramadas_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                }
+            }
         }
 
         // GET: Appointments

@@ -1,4 +1,5 @@
 ﻿// Controllers/VaccinesController.cs
+using ClosedXML.Excel;
 using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
@@ -24,6 +25,94 @@ namespace VetScan.Controllers
         {
             _context = context;
             _logger = logger;
+        }
+
+        public async Task<IActionResult> ExportToExcel(string searchString)
+        {
+            // Obtener los datos (igual que en el Index)
+            var query = _context.Vaccines
+                .Include(v => v.Species)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(v =>
+                    v.VaccineName.Contains(searchString) ||
+                    (v.Manufacturer != null && v.Manufacturer.Contains(searchString)) ||
+                    (v.VaccineType != null && v.VaccineType.Contains(searchString)) ||
+                    (v.Species != null && v.Species.SpeciesName.Contains(searchString)));
+            }
+
+            var vaccines = await query
+                .OrderBy(v => v.VaccineName)
+                .Select(v => new VaccineListViewModel
+                {
+                    VaccineId = v.VaccineId,
+                    VaccineName = v.VaccineName,
+                    Manufacturer = v.Manufacturer,
+                    VaccineType = v.VaccineType,
+                    SpeciesName = v.Species != null ? v.Species.SpeciesName : "Todas",
+                    IsCore = v.IsCore,
+                    IsActive = v.IsActive
+                })
+                .ToListAsync();
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Vacunas");
+                var currentRow = 1;
+
+                // Encabezados
+                worksheet.Cell(currentRow, 1).Value = "Nombre";
+                worksheet.Cell(currentRow, 2).Value = "Fabricante";
+                worksheet.Cell(currentRow, 3).Value = "Tipo";
+                worksheet.Cell(currentRow, 4).Value = "Especie";
+                worksheet.Cell(currentRow, 5).Value = "Tipo";
+                worksheet.Cell(currentRow, 6).Value = "Estado";
+                worksheet.Cell(currentRow, 7).Value = "ID";
+
+                // Formato de encabezados
+                var headerRange = worksheet.Range(currentRow, 1, currentRow, 7);
+                headerRange.Style.Fill.BackgroundColor = XLColor.DarkBlue;
+                headerRange.Style.Font.FontColor = XLColor.White;
+                headerRange.Style.Font.Bold = true;
+
+                // Datos
+                foreach (var item in vaccines)
+                {
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = item.VaccineName;
+                    worksheet.Cell(currentRow, 2).Value = item.Manufacturer ?? "N/A";
+                    worksheet.Cell(currentRow, 3).Value = item.VaccineType ?? "N/A";
+                    worksheet.Cell(currentRow, 4).Value = item.SpeciesName;
+                    worksheet.Cell(currentRow, 5).Value = item.IsCore ? "Básica" : "Opcional";
+                    worksheet.Cell(currentRow, 6).Value = item.IsActive ? "Activa" : "Inactiva";
+                    worksheet.Cell(currentRow, 7).Value = item.VaccineId;
+
+                    // Color para tipo y estado
+                    var typeCell = worksheet.Cell(currentRow, 5);
+                    typeCell.Style.Fill.BackgroundColor = item.IsCore ?
+                        XLColor.Blue : XLColor.Gray;
+                    typeCell.Style.Font.FontColor = XLColor.White;
+
+                    var statusCell = worksheet.Cell(currentRow, 6);
+                    statusCell.Style.Fill.BackgroundColor = item.IsActive ?
+                        XLColor.Green : XLColor.Red;
+                    statusCell.Style.Font.FontColor = XLColor.White;
+                }
+
+                // Ajustar ancho de columnas
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        $"Vacunas_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                }
+            }
         }
 
         public async Task<IActionResult> ExportToPdf(string searchString)

@@ -1,4 +1,5 @@
-﻿using iText.IO.Font.Constants;
+﻿using ClosedXML.Excel;
+using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
 using iText.Kernel.Geom;
@@ -25,6 +26,109 @@ namespace VetScan.Controllers
         {
             _context = context;
             _logger = logger;
+        }
+
+        public async Task<IActionResult> ExportToExcel(string searchString)
+        {
+            // Obtener los datos (igual que en el Index)
+            var query = _context.VaccinationHistories
+                .Include(v => v.Pet)
+                .Include(v => v.Vaccine)
+                .Include(v => v.Veterinarian)
+                    .ThenInclude(vet => vet.User)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(v =>
+                    v.Pet.PetName.Contains(searchString) ||
+                    v.Vaccine.VaccineName.Contains(searchString) ||
+                    (v.Veterinarian.User.FirstName + " " + v.Veterinarian.User.LastName).Contains(searchString) ||
+                    v.BatchNumber!.Contains(searchString));
+            }
+
+            var vaccinations = await query
+                .OrderByDescending(v => v.VaccinationDate)
+                .Select(v => new VaccinationHistoryListViewModel
+                {
+                    VaccinationId = v.VaccinationId,
+                    PetName = v.Pet.PetName,
+                    VaccineName = v.Vaccine.VaccineName,
+                    VeterinarianName = $"{v.Veterinarian.User.FirstName} {v.Veterinarian.User.LastName}",
+                    VaccinationDate = v.VaccinationDate,
+                    BatchNumber = v.BatchNumber!,
+                    NextDueDate = v.NextDueDate
+                })
+                .ToListAsync();
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("HistorialVacunacion");
+                var currentRow = 1;
+
+                // Encabezados
+                worksheet.Cell(currentRow, 1).Value = "Mascota";
+                worksheet.Cell(currentRow, 2).Value = "Vacuna";
+                worksheet.Cell(currentRow, 3).Value = "Veterinario";
+                worksheet.Cell(currentRow, 4).Value = "Fecha Vacunación";
+                worksheet.Cell(currentRow, 5).Value = "Número de Lote";
+                worksheet.Cell(currentRow, 6).Value = "Próxima Dosis";
+                worksheet.Cell(currentRow, 7).Value = "Estado";
+                worksheet.Cell(currentRow, 8).Value = "ID";
+
+                // Formato de encabezados
+                var headerRange = worksheet.Range(currentRow, 1, currentRow, 8);
+                headerRange.Style.Fill.BackgroundColor = XLColor.DarkBlue;
+                headerRange.Style.Font.FontColor = XLColor.White;
+                headerRange.Style.Font.Bold = true;
+
+                // Datos
+                foreach (var item in vaccinations)
+                {
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = item.PetName;
+                    worksheet.Cell(currentRow, 2).Value = item.VaccineName;
+                    worksheet.Cell(currentRow, 3).Value = item.VeterinarianName;
+                    worksheet.Cell(currentRow, 4).Value = item.VaccinationDate.ToString("dd/MM/yyyy");
+                    worksheet.Cell(currentRow, 5).Value = item.BatchNumber;
+                    worksheet.Cell(currentRow, 6).Value = item.NextDueDate?.ToString("dd/MM/yyyy") ?? "N/A";
+
+                    // Determinar estado y color
+                    string status;
+                    XLColor statusColor;
+
+                    if (item.NextDueDate.HasValue)
+                    {
+                        status = item.NextDueDate.Value < DateTime.Today ? "Vencida" : "Pendiente";
+                        statusColor = item.NextDueDate.Value < DateTime.Today ? XLColor.Red : XLColor.Green;
+                    }
+                    else
+                    {
+                        status = "No aplica";
+                        statusColor = XLColor.LightGray;
+                    }
+
+                    worksheet.Cell(currentRow, 7).Value = status;
+                    worksheet.Cell(currentRow, 8).Value = item.VaccinationId;
+
+                    // Formato condicional para estado
+                    var statusCell = worksheet.Cell(currentRow, 7);
+                    statusCell.Style.Fill.BackgroundColor = statusColor;
+                    statusCell.Style.Font.FontColor = XLColor.White;
+                }
+
+                // Ajustar ancho de columnas
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        $"HistorialVacunacion_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                }
+            }
         }
 
         public async Task<IActionResult> ExportToPdf(string searchString)

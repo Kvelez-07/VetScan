@@ -1,4 +1,5 @@
 ﻿// Controllers/VitalSignsController.cs
+using ClosedXML.Excel;
 using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
@@ -24,6 +25,93 @@ namespace VetScan.Controllers
         {
             _context = context;
             _logger = logger;
+        }
+
+        public async Task<IActionResult> ExportToExcel(string searchString)
+        {
+            // Obtener los datos (igual que en el Index)
+            var query = _context.VitalSigns
+                .Include(vs => vs.Consultation)
+                    .ThenInclude(c => c.MedicalRecord)
+                        .ThenInclude(mr => mr.Pet)
+                .Include(vs => vs.Consultation)
+                    .ThenInclude(c => c.AttendingVeterinarian)
+                        .ThenInclude(v => v.User)
+                .OrderByDescending(vs => vs.RecordedDate)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(vs =>
+                    vs.Consultation.MedicalRecord.Pet.PetName.Contains(searchString));
+            }
+
+            var vitalSigns = await query
+                .Select(vs => new VitalSignListViewModel
+                {
+                    VitalSignId = vs.VitalSignId,
+                    ConsultationId = vs.ConsultationId,
+                    ConsultationInfo = $"Consulta del {vs.Consultation.ConsultationDate:dd/MM/yyyy}",
+                    PetName = vs.Consultation.MedicalRecord.Pet.PetName,
+                    RecordedDate = vs.RecordedDate,
+                    Temperature = vs.Temperature,
+                    HeartRate = vs.HeartRate,
+                    RespiratoryRate = vs.RespiratoryRate,
+                    Weight = vs.Weight,
+                    BloodPressure = vs.BloodPressureSystolic.HasValue && vs.BloodPressureDiastolic.HasValue ?
+                        $"{vs.BloodPressureSystolic}/{vs.BloodPressureDiastolic}" : "N/A"
+                })
+                .ToListAsync();
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("SignosVitales");
+                var currentRow = 1;
+
+                // Encabezados
+                worksheet.Cell(currentRow, 1).Value = "Fecha";
+                worksheet.Cell(currentRow, 2).Value = "Mascota";
+                worksheet.Cell(currentRow, 3).Value = "Consulta";
+                worksheet.Cell(currentRow, 4).Value = "Temperatura (°C)";
+                worksheet.Cell(currentRow, 5).Value = "Frec. Cardíaca (lpm)";
+                worksheet.Cell(currentRow, 6).Value = "Frec. Respiratoria (rpm)";
+                worksheet.Cell(currentRow, 7).Value = "Peso (kg)";
+                worksheet.Cell(currentRow, 8).Value = "Presión Arterial";
+                worksheet.Cell(currentRow, 9).Value = "ID";
+
+                // Formato de encabezados
+                var headerRange = worksheet.Range(currentRow, 1, currentRow, 9);
+                headerRange.Style.Fill.BackgroundColor = XLColor.DarkBlue;
+                headerRange.Style.Font.FontColor = XLColor.White;
+                headerRange.Style.Font.Bold = true;
+
+                // Datos
+                foreach (var item in vitalSigns)
+                {
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = item.RecordedDate.ToString("dd/MM/yyyy HH:mm");
+                    worksheet.Cell(currentRow, 2).Value = item.PetName;
+                    worksheet.Cell(currentRow, 3).Value = item.ConsultationInfo;
+                    worksheet.Cell(currentRow, 4).Value = item.Temperature;
+                    worksheet.Cell(currentRow, 5).Value = item.HeartRate;
+                    worksheet.Cell(currentRow, 6).Value = item.RespiratoryRate;
+                    worksheet.Cell(currentRow, 7).Value = item.Weight;
+                    worksheet.Cell(currentRow, 8).Value = item.BloodPressure;
+                    worksheet.Cell(currentRow, 9).Value = item.VitalSignId;
+                }
+
+                // Ajustar ancho de columnas
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        $"SignosVitales_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                }
+            }
         }
 
         public async Task<IActionResult> ExportToPdf(string searchString)

@@ -1,4 +1,5 @@
 ﻿// Controllers/MedicationsController.cs
+using ClosedXML.Excel;
 using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
@@ -24,6 +25,77 @@ namespace VetScan.Controllers
         {
             _context = context;
             _logger = logger;
+        }
+
+        public async Task<IActionResult> ExportToExcel(string searchString)
+        {
+            // Obtener los datos (igual que en el Index)
+            var query = _context.Medications
+                .Where(m => m.IsActive);
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(m =>
+                    m.MedicationName.Contains(searchString) ||
+                    (m.Manufacturer != null && m.Manufacturer.Contains(searchString)));
+            }
+
+            var medications = await query
+                .OrderBy(m => m.MedicationName)
+                .Select(m => new MedicationListViewModel
+                {
+                    MedicationId = m.MedicationId,
+                    MedicationName = m.MedicationName,
+                    GenericName = m.GenericName,
+                    Manufacturer = m.Manufacturer,
+                    Concentration = m.Concentration,
+                    Category = m.Category
+                })
+                .ToListAsync();
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Medicamentos");
+                var currentRow = 1;
+
+                // Encabezados
+                worksheet.Cell(currentRow, 1).Value = "Nombre Comercial";
+                worksheet.Cell(currentRow, 2).Value = "Nombre Genérico";
+                worksheet.Cell(currentRow, 3).Value = "Fabricante";
+                worksheet.Cell(currentRow, 4).Value = "Concentración";
+                worksheet.Cell(currentRow, 5).Value = "Categoría";
+                worksheet.Cell(currentRow, 6).Value = "ID";
+
+                // Formato de encabezados
+                var headerRange = worksheet.Range(currentRow, 1, currentRow, 6);
+                headerRange.Style.Fill.BackgroundColor = XLColor.DarkBlue;
+                headerRange.Style.Font.FontColor = XLColor.White;
+                headerRange.Style.Font.Bold = true;
+
+                // Datos
+                foreach (var item in medications)
+                {
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = item.MedicationName;
+                    worksheet.Cell(currentRow, 2).Value = item.GenericName ?? "N/A";
+                    worksheet.Cell(currentRow, 3).Value = item.Manufacturer ?? "N/A";
+                    worksheet.Cell(currentRow, 4).Value = item.Concentration ?? "N/A";
+                    worksheet.Cell(currentRow, 5).Value = item.Category ?? "N/A";
+                    worksheet.Cell(currentRow, 6).Value = item.MedicationId;
+                }
+
+                // Ajustar ancho de columnas
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        $"Medicamentos_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                }
+            }
         }
 
         public async Task<IActionResult> ExportToPdf(string searchString)

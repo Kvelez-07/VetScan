@@ -1,4 +1,5 @@
 ﻿// Controllers/PrescriptionsController.cs
+using ClosedXML.Excel;
 using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
@@ -24,6 +25,96 @@ namespace VetScan.Controllers
         {
             _context = context;
             _logger = logger;
+        }
+
+        public async Task<IActionResult> ExportToExcel(string searchString)
+        {
+            var query = _context.Prescriptions
+                .Include(p => p.Consultation)
+                    .ThenInclude(c => c.MedicalRecord)
+                        .ThenInclude(mr => mr.Pet)
+                .Include(p => p.Medication)
+                .OrderByDescending(p => p.CreatedDate)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(p =>
+                    p.Consultation.MedicalRecord.Pet.PetName.Contains(searchString) ||
+                    p.Medication.MedicationName.Contains(searchString));
+            }
+
+            var prescriptions = await query
+                .Select(p => new PrescriptionListViewModel
+                {
+                    PrescriptionId = p.PrescriptionId,
+                    ConsultationId = p.ConsultationId,
+                    ConsultationInfo = $"Consulta del {p.Consultation.ConsultationDate:dd/MM/yyyy}",
+                    PetName = p.Consultation.MedicalRecord.Pet.PetName,
+                    MedicationName = p.Medication.MedicationName,
+                    Dosage = p.Dosage,
+                    Frequency = p.Frequency,
+                    CreatedDate = p.CreatedDate,
+                    Status = p.Status
+                })
+                .ToListAsync();
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Prescripciones");
+                var currentRow = 1;
+
+                // Encabezados
+                worksheet.Cell(currentRow, 1).Value = "Fecha";
+                worksheet.Cell(currentRow, 2).Value = "Mascota";
+                worksheet.Cell(currentRow, 3).Value = "Consulta";
+                worksheet.Cell(currentRow, 4).Value = "Medicamento";
+                worksheet.Cell(currentRow, 5).Value = "Dosis";
+                worksheet.Cell(currentRow, 6).Value = "Frecuencia";
+                worksheet.Cell(currentRow, 7).Value = "Estado";
+                worksheet.Cell(currentRow, 8).Value = "ID";
+
+                // Formato de encabezados
+                var headerRange = worksheet.Range(currentRow, 1, currentRow, 8);
+                headerRange.Style.Fill.BackgroundColor = XLColor.DarkBlue;
+                headerRange.Style.Font.FontColor = XLColor.White;
+                headerRange.Style.Font.Bold = true;
+
+                // Datos
+                foreach (var item in prescriptions)
+                {
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = item.FormattedDate;
+                    worksheet.Cell(currentRow, 2).Value = item.PetName;
+                    worksheet.Cell(currentRow, 3).Value = item.ConsultationInfo;
+                    worksheet.Cell(currentRow, 4).Value = item.MedicationName;
+                    worksheet.Cell(currentRow, 5).Value = item.Dosage;
+                    worksheet.Cell(currentRow, 6).Value = item.Frequency;
+                    worksheet.Cell(currentRow, 7).Value = item.Status;
+                    worksheet.Cell(currentRow, 8).Value = item.PrescriptionId;
+
+                    // Color para estado
+                    var statusCell = worksheet.Cell(currentRow, 7);
+                    statusCell.Style.Fill.BackgroundColor =
+                        item.Status == "Active" ? XLColor.Green :
+                        item.Status == "Completed" ? XLColor.Blue :
+                        item.Status == "Cancelled" ? XLColor.Red :
+                        XLColor.Gray;
+                    statusCell.Style.Font.FontColor = XLColor.White;
+                }
+
+                // Ajustar ancho de columnas
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        $"Prescripciones_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                }
+            }
         }
 
         public async Task<IActionResult> ExportToPdf(string searchString)
