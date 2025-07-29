@@ -9,6 +9,7 @@ using iText.Layout.Element;
 using iText.Layout.Properties;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PuppeteerSharp;
 using VetScan.Data;
 using VetScan.Models;
 using VetScan.ViewModels;
@@ -292,6 +293,78 @@ namespace VetScan.Controllers
                 .Add(new Paragraph(text).SetFont(font))
                 .SetPadding(5)
                 .SetTextAlignment(alignment);
+        }
+
+        public async Task<IActionResult> ExportDetailsToImage(int id, string format = "png")
+        {
+            var role = await _context.UserRoles
+                .Include(r => r.Users)
+                .FirstOrDefaultAsync(r => r.RoleId == id);
+
+            if (role == null)
+            {
+                return NotFound();
+            }
+
+            // Configurar la URL para la vista
+            var request = HttpContext.Request;
+            var baseUrl = $"{request.Scheme}://{request.Host}";
+            var url = $"{baseUrl}/UserRoles/Details/{id}?exporting=true";
+
+            // Configurar Puppeteer
+            var browserFetcher = new BrowserFetcher();
+            await browserFetcher.DownloadAsync();
+
+            await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+            {
+                Headless = true,
+                Args = new[] { "--no-sandbox" }
+            });
+
+            await using var page = await browser.NewPageAsync();
+
+            // Configurar la vista para exportación
+            await page.SetViewportAsync(new ViewPortOptions
+            {
+                Width = 1200,
+                Height = 900,
+                DeviceScaleFactor = 2
+            });
+
+            await page.GoToAsync(url, WaitUntilNavigation.Networkidle0);
+            await page.WaitForSelectorAsync(".card");
+
+            // Tomar captura de pantalla
+            byte[] imageBytes;
+
+            if (format.ToLower() == "jpg" || format.ToLower() == "jpeg")
+            {
+                imageBytes = await page.ScreenshotDataAsync(new ScreenshotOptions
+                {
+                    Type = ScreenshotType.Jpeg,
+                    Quality = 90,
+                    FullPage = true
+                });
+            }
+            else
+            {
+                imageBytes = await page.ScreenshotDataAsync(new ScreenshotOptions
+                {
+                    Type = ScreenshotType.Png,
+                    FullPage = true
+                });
+            }
+
+            var contentType = format.ToLower() == "jpg" || format.ToLower() == "jpeg"
+                ? "image/jpeg"
+                : "image/png";
+
+            var fileExtension = format.ToLower() == "jpg" || format.ToLower() == "jpeg"
+                ? "jpg"
+                : "png";
+
+            return File(imageBytes, contentType,
+                $"Rol_{role.RoleName}_{DateTime.Now:yyyyMMdd}.{fileExtension}");
         }
 
         // GET: UserRoles/Details/5

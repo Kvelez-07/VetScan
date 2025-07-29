@@ -9,6 +9,7 @@ using iText.Layout.Element;
 using iText.Layout.Properties;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PuppeteerSharp;
 using System.Linq;
 using System.Threading.Tasks;
 using VetScan.Data;
@@ -428,6 +429,81 @@ namespace VetScan.Controllers
                 .Add(new Paragraph(text).SetFont(font))
                 .SetPadding(5)
                 .SetTextAlignment(alignment);
+        }
+
+        public async Task<IActionResult> ExportDetailsToImage(int id, string format = "png")
+        {
+            var vaccination = await _context.VaccinationHistories
+                .Include(v => v.Pet)
+                .Include(v => v.Vaccine)
+                .Include(v => v.Veterinarian)
+                    .ThenInclude(vet => vet.User)
+                .FirstOrDefaultAsync(v => v.VaccinationId == id);
+
+            if (vaccination == null)
+            {
+                return NotFound();
+            }
+
+            // Configurar la URL para la vista
+            var request = HttpContext.Request;
+            var baseUrl = $"{request.Scheme}://{request.Host}";
+            var url = $"{baseUrl}/VaccinationHistories/Details/{id}?exporting=true";
+
+            // Configurar Puppeteer
+            var browserFetcher = new BrowserFetcher();
+            await browserFetcher.DownloadAsync();
+
+            await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+            {
+                Headless = true,
+                Args = new[] { "--no-sandbox" }
+            });
+
+            await using var page = await browser.NewPageAsync();
+
+            // Configurar la vista para exportación
+            await page.SetViewportAsync(new ViewPortOptions
+            {
+                Width = 1200,
+                Height = 900,
+                DeviceScaleFactor = 2
+            });
+
+            await page.GoToAsync(url, WaitUntilNavigation.Networkidle0);
+            await page.WaitForSelectorAsync(".card");
+
+            // Tomar captura de pantalla
+            byte[] imageBytes;
+
+            if (format.ToLower() == "jpg" || format.ToLower() == "jpeg")
+            {
+                imageBytes = await page.ScreenshotDataAsync(new ScreenshotOptions
+                {
+                    Type = ScreenshotType.Jpeg,
+                    Quality = 90,
+                    FullPage = true
+                });
+            }
+            else
+            {
+                imageBytes = await page.ScreenshotDataAsync(new ScreenshotOptions
+                {
+                    Type = ScreenshotType.Png,
+                    FullPage = true
+                });
+            }
+
+            var contentType = format.ToLower() == "jpg" || format.ToLower() == "jpeg"
+                ? "image/jpeg"
+                : "image/png";
+
+            var fileExtension = format.ToLower() == "jpg" || format.ToLower() == "jpeg"
+                ? "jpg"
+                : "png";
+
+            return File(imageBytes, contentType,
+                $"CertificadoVacunacion_{vaccination.Pet.PetName}_{vaccination.VaccinationDate:yyyyMMdd}.{fileExtension}");
         }
 
         // GET: VaccinationHistories/Details/5

@@ -10,6 +10,7 @@ using iText.Layout.Element;
 using iText.Layout.Properties;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PuppeteerSharp;
 using VetScan.Data;
 using VetScan.Models;
 using VetScan.ViewModels;
@@ -369,6 +370,82 @@ namespace VetScan.Controllers
                 .Add(new Paragraph(text).SetFont(font))
                 .SetPadding(5)
                 .SetTextAlignment(alignment);
+        }
+
+        // Método para exportar detalles a imagen (similar al de MedicalRecords)
+        public async Task<IActionResult> ExportDetailsToImage(int id, string format = "png")
+        {
+            var consultation = await _context.MedicalConsultations
+                .Include(mc => mc.MedicalRecord)
+                    .ThenInclude(mr => mr.Pet)
+                .Include(mc => mc.AttendingVeterinarian)
+                    .ThenInclude(v => v.User)
+                .FirstOrDefaultAsync(mc => mc.ConsultationId == id);
+
+            if (consultation == null)
+            {
+                return NotFound();
+            }
+
+            // Configurar la URL para la vista
+            var request = HttpContext.Request;
+            var baseUrl = $"{request.Scheme}://{request.Host}";
+            var url = $"{baseUrl}/MedicalConsultations/Details/{id}?exporting=true";
+
+            // Configurar Puppeteer
+            var browserFetcher = new BrowserFetcher();
+            await browserFetcher.DownloadAsync();
+
+            await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+            {
+                Headless = true,
+                Args = new[] { "--no-sandbox" }
+            });
+
+            await using var page = await browser.NewPageAsync();
+
+            // Configurar la vista para exportación
+            await page.SetViewportAsync(new ViewPortOptions
+            {
+                Width = 1200,
+                Height = 1600,
+                DeviceScaleFactor = 2
+            });
+
+            await page.GoToAsync(url, WaitUntilNavigation.Networkidle0);
+            await page.WaitForSelectorAsync(".card");
+
+            // Tomar captura de pantalla
+            byte[] imageBytes;
+
+            if (format.ToLower() == "jpg" || format.ToLower() == "jpeg")
+            {
+                imageBytes = await page.ScreenshotDataAsync(new ScreenshotOptions
+                {
+                    Type = ScreenshotType.Jpeg,
+                    Quality = 90,
+                    FullPage = true
+                });
+            }
+            else
+            {
+                imageBytes = await page.ScreenshotDataAsync(new ScreenshotOptions
+                {
+                    Type = ScreenshotType.Png,
+                    FullPage = true
+                });
+            }
+
+            var contentType = format.ToLower() == "jpg" || format.ToLower() == "jpeg"
+                ? "image/jpeg"
+                : "image/png";
+
+            var fileExtension = format.ToLower() == "jpg" || format.ToLower() == "jpeg"
+                ? "jpg"
+                : "png";
+
+            return File(imageBytes, contentType,
+                $"Consulta_{consultation.MedicalRecord.Pet.PetName}_{consultation.ConsultationDate:yyyyMMdd}.{fileExtension}");
         }
 
         // GET: MedicalConsultations/Details/5

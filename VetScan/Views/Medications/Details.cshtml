@@ -1,7 +1,23 @@
 ﻿@model VetScan.ViewModels.MedicationListViewModel
-
 @{
-    ViewData["Title"] = "Detalles de Medicamento";
+    ViewData["Title"] = "Detalles del Medicamento";
+    // Verificar si estamos en modo exportación
+    var exporting = Context.Request.Query["exporting"].FirstOrDefault() == "true";
+
+    if (exporting)
+    {
+        Layout = null;
+        <style>
+            body {
+                padding: 20px;
+                background-color: white !important;
+            }
+
+            .no-export {
+                display: none !important;
+            }
+        </style>
+    }
 }
 
 <div class="container mt-4">
@@ -10,9 +26,30 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h2 class="mb-0">@Model.MedicationName</h2>
                 <div>
-                    <a asp-action="ExportDetailsToPdf" asp-route-id="@Model.MedicationId" class="btn btn-sm btn-danger me-2">
-                        <i class="bi bi-file-earmark-pdf"></i> Exportar
-                    </a>
+                    <!-- Botón de Exportación con Dropdown -->
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-download"></i> Exportar
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" asp-action="ExportDetailsToPdf" asp-route-id="@Model.MedicationId">
+                                    <i class="bi bi-file-earmark-pdf text-danger"></i> PDF
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-action="ExportDetailsToImage" asp-route-id="@Model.MedicationId" asp-route-format="png">
+                                    <i class="bi bi-file-image text-success"></i> PNG
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-action="ExportDetailsToImage" asp-route-id="@Model.MedicationId" asp-route-format="jpg">
+                                    <i class="bi bi-file-image text-info"></i> JPG
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
                     <a asp-action="Edit" asp-route-id="@Model.MedicationId" class="btn btn-sm btn-warning">
                         <i class="bi bi-pencil"></i> Editar
                     </a>
@@ -70,7 +107,7 @@
                 <div class="alert alert-info">
                     <i class="bi bi-info-circle"></i>
                     Aquí puedes mostrar las prescripciones que usan este medicamento.
-                    <a href="#" class="alert-link">Ver todas las prescripciones</a>
+                    <a asp-controller="Prescriptions" asp-action="Details" asp-route-id="@Model.MedicationId" class="alert-link">Ver todas las prescripciones</a>
                 </div>
             </div>
         </div>

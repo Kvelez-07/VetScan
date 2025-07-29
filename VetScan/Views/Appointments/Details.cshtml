@@ -1,21 +1,59 @@
 ﻿@model VetScan.ViewModels.AppointmentListViewModel
 @{
-    ViewData["Title"] = "Detalles de Cita";
+    ViewData["Title"] = "Detalles de la Cita";
+    // Verificar si estamos en modo exportación
+    var exporting = Context.Request.Query["exporting"].FirstOrDefault() == "true";
+
+    if (exporting)
+    {
+        Layout = null;
+        <style>
+            body {
+                padding: 20px;
+                background-color: white !important;
+            }
+
+            .no-export {
+                display: none !important;
+            }
+        </style>
+    }
 }
 
 <div class="container mt-4">
     <div class="card shadow">
         <div class="card-header bg-primary text-white">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center @(exporting ? "no-export" : "")">
                 <h2 class="mb-0">Cita del @Model.FormattedDate</h2>
                 <div>
-                    <a asp-action="ExportDetailsToPdf" asp-route-id="@Model.AppointmentId" class="btn btn-sm btn-danger me-2">
-                        <i class="bi bi-file-earmark-pdf"></i> Exportar
-                    </a>
-                    <a asp-action="Edit" asp-route-id="@Model.AppointmentId" class="btn btn-sm btn-warning">
+                    <!-- Botón de Exportación con Dropdown -->
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-download"></i> Exportar
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" asp-action="ExportDetailsToPdf" asp-route-id="@Model.AppointmentId">
+                                    <i class="bi bi-file-earmark-pdf text-danger"></i> PDF
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-action="ExportDetailsToImage" asp-route-id="@Model.AppointmentId" asp-route-format="png">
+                                    <i class="bi bi-file-image text-success"></i> PNG
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-action="ExportDetailsToImage" asp-route-id="@Model.AppointmentId" asp-route-format="jpg">
+                                    <i class="bi bi-file-image text-info"></i> JPG
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <a asp-action="Edit" asp-route-id="@Model.AppointmentId" class="btn btn-warning">
                         <i class="bi bi-pencil"></i> Editar
                     </a>
-                    <a asp-action="Index" class="btn btn-sm btn-secondary">
+                    <a asp-action="Index" class="btn btn-secondary ms-2">
                         <i class="bi bi-arrow-left"></i> Volver
                     </a>
                 </div>
@@ -76,11 +114,66 @@
         </div>
 
         <div class="card-footer">
-            <div class="d-flex justify-content-end gap-2">
-                <a asp-action="Index" class="btn btn-outline-secondary">
-                    <i class="bi bi-list"></i> Volver al listado
-                </a>
+            <div class="d-flex justify-content-between">
+                <small class="text-muted">
+                    ID: @Model.AppointmentId | Creado: @DateTime.Now.ToString("dd/MM/yyyy")
+                </small>
+                <div>
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-list"></i> Volver al listado
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    /* Estilos para el dropdown de exportación */
+    .btn-group .dropdown-menu {
+        min-width: 12rem;
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+    }
+
+        .dropdown-item i {
+            font-size: 1.1rem;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .dropdown-item:active {
+            background-color: #e9ecef;
+        }
+
+    .status-scheduled {
+        color: #fff;
+        background-color: #0d6efd;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.875em;
+    }
+
+    .status-completed {
+        color: #fff;
+        background-color: #198754;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.875em;
+    }
+
+    .status-cancelled {
+        color: #fff;
+        background-color: #dc3545;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.875em;
+    }
+</style>
