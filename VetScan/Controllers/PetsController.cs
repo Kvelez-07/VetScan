@@ -9,6 +9,7 @@ using iText.Layout.Element;
 using iText.Layout.Properties;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PuppeteerSharp;
 using VetScan.Data;
 using VetScan.Models;
 using VetScan.ViewModels;
@@ -246,6 +247,227 @@ namespace VetScan.Controllers
             return View(pets);
         }
 
+        public async Task<IActionResult> ExportDetailsToPdf(int id)
+        {
+            var pet = await _context.Pets
+                .Include(p => p.Species)
+                .Include(p => p.Breed)
+                .Include(p => p.PetOwner)
+                .ThenInclude(po => po.User)
+                .FirstOrDefaultAsync(p => p.PetId == id && p.IsActive);
+
+            if (pet == null)
+            {
+                return NotFound();
+            }
+
+            // Configuración del PDF
+            var memoryStream = new MemoryStream();
+            var writer = new PdfWriter(memoryStream);
+            var pdf = new PdfDocument(writer);
+            var document = new Document(pdf, PageSize.A4);
+
+            // Fuentes
+            var headerFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+            var normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+            var boldFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+
+            // Título
+            var title = new Paragraph($"Ficha de Mascota: {pet.PetName}")
+                .SetFont(headerFont)
+                .SetFontSize(16)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetMarginBottom(20);
+            document.Add(title);
+
+            // Información básica
+            var infoTable = new Table(new float[] { 3, 7 })
+                .SetWidth(UnitValue.CreatePercentValue(100))
+                .SetMarginBottom(20);
+
+            infoTable.AddCell(new Cell().Add(new Paragraph("Código:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+            infoTable.AddCell(new Cell().Add(new Paragraph(pet.PetCode).SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+
+            infoTable.AddCell(new Cell().Add(new Paragraph("Nombre:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+            infoTable.AddCell(new Cell().Add(new Paragraph(pet.PetName).SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+
+            infoTable.AddCell(new Cell().Add(new Paragraph("Especie:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+            infoTable.AddCell(new Cell().Add(new Paragraph(pet.Species.SpeciesName).SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+
+            infoTable.AddCell(new Cell().Add(new Paragraph("Raza:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+            infoTable.AddCell(new Cell().Add(new Paragraph(pet.Breed?.BreedName ?? "N/A").SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+
+            infoTable.AddCell(new Cell().Add(new Paragraph("Fecha Nacimiento:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+            infoTable.AddCell(new Cell().Add(new Paragraph(pet.DateOfBirth?.ToString("dd/MM/yyyy") ?? "N/A").SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+
+            infoTable.AddCell(new Cell().Add(new Paragraph("Edad:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+            infoTable.AddCell(new Cell().Add(new Paragraph(CalculateAgeDisplay(pet.DateOfBirth)).SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+
+            infoTable.AddCell(new Cell().Add(new Paragraph("Género:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+            infoTable.AddCell(new Cell().Add(new Paragraph(
+                pet.Gender == "M" ? "Macho" : pet.Gender == "F" ? "Hembra" : "No especificado")
+                .SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+
+            infoTable.AddCell(new Cell().Add(new Paragraph("Peso:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+            infoTable.AddCell(new Cell().Add(new Paragraph(pet.Weight?.ToString("0.0") + " kg" ?? "N/A").SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+
+            infoTable.AddCell(new Cell().Add(new Paragraph("Color:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+            infoTable.AddCell(new Cell().Add(new Paragraph(pet.Color ?? "N/A").SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+
+            infoTable.AddCell(new Cell().Add(new Paragraph("Dueño:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+            infoTable.AddCell(new Cell().Add(new Paragraph(
+                $"{pet.PetOwner.User.FirstName} {pet.PetOwner.User.LastName}")
+                .SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+
+            infoTable.AddCell(new Cell().Add(new Paragraph("Estado:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
+            var statusCell = new Cell().Add(new Paragraph(pet.IsActive ? "Activo" : "Inactivo").SetFont(normalFont))
+                .SetPadding(5)
+                .SetTextAlignment(TextAlignment.LEFT);
+            statusCell.SetBackgroundColor(pet.IsActive ?
+                new DeviceRgb(40, 167, 69) : new DeviceRgb(108, 117, 125));
+            statusCell.SetFontColor(DeviceRgb.WHITE);
+            infoTable.AddCell(statusCell);
+
+            document.Add(infoTable);
+
+            // Información adicional
+            var notesTitle = new Paragraph("Información Adicional")
+                .SetFont(headerFont)
+                .SetFontSize(14)
+                .SetMarginBottom(10);
+            document.Add(notesTitle);
+
+            var notesContent = new Paragraph("Para ver el historial médico completo, vacunas y otros registros, consulte el sistema.")
+                .SetFont(normalFont)
+                .SetMarginBottom(20);
+            document.Add(notesContent);
+
+            // Pie de página
+            var footer = new Paragraph($"Generado el {DateTime.Now.ToString("dd/MM/yyyy HH:mm")} | ID: {pet.PetId}")
+                .SetFont(normalFont)
+                .SetFontSize(8)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetFontColor(DeviceRgb.BLACK);
+            document.Add(footer);
+
+            document.Close();
+            return File(memoryStream.ToArray(), "application/pdf", $"Mascota_{pet.PetName}_{DateTime.Now:yyyyMMdd}.pdf");
+        }
+
+        // Método para exportar detalles a imagen
+        public async Task<IActionResult> ExportDetailsToImage(int id, string format = "png")
+        {
+            var pet = await _context.Pets
+                .Include(p => p.Species)
+                .Include(p => p.Breed)
+                .Include(p => p.PetOwner)
+                .ThenInclude(po => po.User)
+                .FirstOrDefaultAsync(p => p.PetId == id && p.IsActive);
+
+            if (pet == null)
+            {
+                return NotFound();
+            }
+
+            // Configurar la URL para la vista
+            var request = HttpContext.Request;
+            var baseUrl = $"{request.Scheme}://{request.Host}";
+            var url = $"{baseUrl}/Pets/Details/{id}?exporting=true";
+
+            // Configurar Puppeteer
+            var browserFetcher = new BrowserFetcher();
+            await browserFetcher.DownloadAsync();
+
+            await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+            {
+                Headless = true,
+                Args = new[] { "--no-sandbox" }
+            });
+
+            await using var page = await browser.NewPageAsync();
+
+            // Configurar la vista para exportación
+            await page.SetViewportAsync(new ViewPortOptions
+            {
+                Width = 1200,
+                Height = 800,
+                DeviceScaleFactor = 2
+            });
+
+            await page.GoToAsync(url, WaitUntilNavigation.Networkidle0);
+            await page.WaitForSelectorAsync(".card");
+
+            // Tomar captura de pantalla
+            byte[] imageBytes;
+
+            if (format.ToLower() == "jpg" || format.ToLower() == "jpeg")
+            {
+                imageBytes = await page.ScreenshotDataAsync(new ScreenshotOptions
+                {
+                    Type = ScreenshotType.Jpeg,
+                    Quality = 90,
+                    FullPage = true
+                });
+            }
+            else
+            {
+                imageBytes = await page.ScreenshotDataAsync(new ScreenshotOptions
+                {
+                    Type = ScreenshotType.Png,
+                    FullPage = true
+                });
+            }
+
+            var contentType = format.ToLower() == "jpg" || format.ToLower() == "jpeg"
+                ? "image/jpeg"
+                : "image/png";
+
+            var fileExtension = format.ToLower() == "jpg" || format.ToLower() == "jpeg"
+                ? "jpg"
+                : "png";
+
+            return File(imageBytes, contentType,
+                $"Mascota_{pet.PetName}_{DateTime.Now:yyyyMMdd}.{fileExtension}");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var pet = await _context.Pets
+                .Include(p => p.PetOwner)
+                .ThenInclude(po => po.User)
+                .Include(p => p.Species)
+                .Include(p => p.Breed)
+                .FirstOrDefaultAsync(m => m.PetId == id && m.IsActive);
+
+            if (pet == null)
+            {
+                return NotFound();
+            }
+
+            var viewModel = new PetListViewModel
+            {
+                PetId = pet.PetId,
+                PetCode = pet.PetCode,
+                PetName = pet.PetName,
+                Species = pet.Species.SpeciesName,
+                Breed = pet.Breed?.BreedName,
+                OwnerName = $"{pet.PetOwner.User.FirstName} {pet.PetOwner.User.LastName}",
+                DateOfBirth = pet.DateOfBirth,
+                GenderDisplay = pet.Gender == "M" ? "Macho" : pet.Gender == "F" ? "Hembra" : "No especificado",
+                Weight = pet.Weight,
+                Color = pet.Color,
+                IsActive = pet.IsActive
+            };
+
+            return View(viewModel);
+        }
+
         private static string CalculateAgeDisplay(DateTime? dateOfBirth)
         {
             if (!dateOfBirth.HasValue)
@@ -437,151 +659,6 @@ namespace VetScan.Controllers
                 ViewBag.OwnerName = await GetOwnerName(model.PetOwnerId);
                 return View(model);
             }
-        }
-
-        public async Task<IActionResult> ExportDetailsToPdf(int id)
-        {
-            var pet = await _context.Pets
-                .Include(p => p.Species)
-                .Include(p => p.Breed)
-                .Include(p => p.PetOwner)
-                .ThenInclude(po => po.User)
-                .FirstOrDefaultAsync(p => p.PetId == id && p.IsActive);
-
-            if (pet == null)
-            {
-                return NotFound();
-            }
-
-            // Configuración del PDF
-            var memoryStream = new MemoryStream();
-            var writer = new PdfWriter(memoryStream);
-            var pdf = new PdfDocument(writer);
-            var document = new Document(pdf, PageSize.A4);
-
-            // Fuentes
-            var headerFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
-            var normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
-            var boldFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
-
-            // Título
-            var title = new Paragraph($"Ficha de Mascota: {pet.PetName}")
-                .SetFont(headerFont)
-                .SetFontSize(16)
-                .SetTextAlignment(TextAlignment.CENTER)
-                .SetMarginBottom(20);
-            document.Add(title);
-
-            // Información básica
-            var infoTable = new Table(new float[] { 3, 7 })
-                .SetWidth(UnitValue.CreatePercentValue(100))
-                .SetMarginBottom(20);
-
-            infoTable.AddCell(new Cell().Add(new Paragraph("Código:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-            infoTable.AddCell(new Cell().Add(new Paragraph(pet.PetCode).SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-
-            infoTable.AddCell(new Cell().Add(new Paragraph("Nombre:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-            infoTable.AddCell(new Cell().Add(new Paragraph(pet.PetName).SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-
-            infoTable.AddCell(new Cell().Add(new Paragraph("Especie:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-            infoTable.AddCell(new Cell().Add(new Paragraph(pet.Species.SpeciesName).SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-
-            infoTable.AddCell(new Cell().Add(new Paragraph("Raza:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-            infoTable.AddCell(new Cell().Add(new Paragraph(pet.Breed?.BreedName ?? "N/A").SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-
-            infoTable.AddCell(new Cell().Add(new Paragraph("Fecha Nacimiento:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-            infoTable.AddCell(new Cell().Add(new Paragraph(pet.DateOfBirth?.ToString("dd/MM/yyyy") ?? "N/A").SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-
-            infoTable.AddCell(new Cell().Add(new Paragraph("Edad:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-            infoTable.AddCell(new Cell().Add(new Paragraph(CalculateAgeDisplay(pet.DateOfBirth)).SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-
-            infoTable.AddCell(new Cell().Add(new Paragraph("Género:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-            infoTable.AddCell(new Cell().Add(new Paragraph(
-                pet.Gender == "M" ? "Macho" : pet.Gender == "F" ? "Hembra" : "No especificado")
-                .SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-
-            infoTable.AddCell(new Cell().Add(new Paragraph("Peso:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-            infoTable.AddCell(new Cell().Add(new Paragraph(pet.Weight?.ToString("0.0") + " kg" ?? "N/A").SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-
-            infoTable.AddCell(new Cell().Add(new Paragraph("Color:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-            infoTable.AddCell(new Cell().Add(new Paragraph(pet.Color ?? "N/A").SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-
-            infoTable.AddCell(new Cell().Add(new Paragraph("Dueño:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-            infoTable.AddCell(new Cell().Add(new Paragraph(
-                $"{pet.PetOwner.User.FirstName} {pet.PetOwner.User.LastName}")
-                .SetFont(normalFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-
-            infoTable.AddCell(new Cell().Add(new Paragraph("Estado:").SetFont(boldFont)).SetPadding(5).SetTextAlignment(TextAlignment.LEFT));
-            var statusCell = new Cell().Add(new Paragraph(pet.IsActive ? "Activo" : "Inactivo").SetFont(normalFont))
-                .SetPadding(5)
-                .SetTextAlignment(TextAlignment.LEFT);
-            statusCell.SetBackgroundColor(pet.IsActive ?
-                new DeviceRgb(40, 167, 69) : new DeviceRgb(108, 117, 125));
-            statusCell.SetFontColor(DeviceRgb.WHITE);
-            infoTable.AddCell(statusCell);
-
-            document.Add(infoTable);
-
-            // Información adicional
-            var notesTitle = new Paragraph("Información Adicional")
-                .SetFont(headerFont)
-                .SetFontSize(14)
-                .SetMarginBottom(10);
-            document.Add(notesTitle);
-
-            var notesContent = new Paragraph("Para ver el historial médico completo, vacunas y otros registros, consulte el sistema.")
-                .SetFont(normalFont)
-                .SetMarginBottom(20);
-            document.Add(notesContent);
-
-            // Pie de página
-            var footer = new Paragraph($"Generado el {DateTime.Now.ToString("dd/MM/yyyy HH:mm")} | ID: {pet.PetId}")
-                .SetFont(normalFont)
-                .SetFontSize(8)
-                .SetTextAlignment(TextAlignment.CENTER)
-                .SetFontColor(DeviceRgb.BLACK);
-            document.Add(footer);
-
-            document.Close();
-            return File(memoryStream.ToArray(), "application/pdf", $"Mascota_{pet.PetName}_{DateTime.Now:yyyyMMdd}.pdf");
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var pet = await _context.Pets
-                .Include(p => p.PetOwner)
-                .ThenInclude(po => po.User)
-                .Include(p => p.Species)
-                .Include(p => p.Breed)
-                .FirstOrDefaultAsync(m => m.PetId == id && m.IsActive);
-
-            if (pet == null)
-            {
-                return NotFound();
-            }
-
-            var viewModel = new PetListViewModel
-            {
-                PetId = pet.PetId,
-                PetCode = pet.PetCode,
-                PetName = pet.PetName,
-                Species = pet.Species.SpeciesName,
-                Breed = pet.Breed?.BreedName,
-                OwnerName = $"{pet.PetOwner.User.FirstName} {pet.PetOwner.User.LastName}",
-                DateOfBirth = pet.DateOfBirth,
-                GenderDisplay = pet.Gender == "M" ? "Macho" : pet.Gender == "F" ? "Hembra" : "No especificado",
-                Weight = pet.Weight,
-                Color = pet.Color,
-                IsActive = pet.IsActive
-            };
-
-            return View(viewModel);
         }
 
         private async Task<string> GetOwnerName(int petOwnerId)
