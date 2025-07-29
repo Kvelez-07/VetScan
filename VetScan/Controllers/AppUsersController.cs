@@ -1,4 +1,5 @@
-﻿using iText.IO.Font.Constants;
+﻿using ClosedXML.Excel;
+using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
 using iText.Kernel.Geom;
@@ -25,8 +26,7 @@ namespace VetScan.Controllers
             _logger = logger;
         }
 
-        // GET: AppUsers
-        public async Task<IActionResult> Index(string searchString)
+        public async Task<IActionResult> ExportToExcel(string searchString)
         {
             var query = _context.AppUsers
                 .Include(u => u.Role)
@@ -57,8 +57,51 @@ namespace VetScan.Controllers
                 })
                 .ToListAsync();
 
-            ViewData["CurrentFilter"] = searchString;
-            return View(users);
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Usuarios");
+                var currentRow = 1;
+
+                // Encabezados
+                worksheet.Cell(currentRow, 1).Value = "Usuario";
+                worksheet.Cell(currentRow, 2).Value = "Nombre";
+                worksheet.Cell(currentRow, 3).Value = "Apellido";
+                worksheet.Cell(currentRow, 4).Value = "Correo";
+                worksheet.Cell(currentRow, 5).Value = "Teléfono";
+                worksheet.Cell(currentRow, 6).Value = "Rol";
+                worksheet.Cell(currentRow, 7).Value = "ID";
+
+                // Formato de encabezados
+                var headerRange = worksheet.Range(currentRow, 1, currentRow, 7);
+                headerRange.Style.Fill.BackgroundColor = XLColor.DarkBlue;
+                headerRange.Style.Font.FontColor = XLColor.White;
+                headerRange.Style.Font.Bold = true;
+
+                // Datos
+                foreach (var item in users)
+                {
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = item.Username;
+                    worksheet.Cell(currentRow, 2).Value = item.FirstName;
+                    worksheet.Cell(currentRow, 3).Value = item.LastName;
+                    worksheet.Cell(currentRow, 4).Value = item.Email;
+                    worksheet.Cell(currentRow, 5).Value = item.PhoneNumber ?? "N/A";
+                    worksheet.Cell(currentRow, 6).Value = item.RoleName;
+                    worksheet.Cell(currentRow, 7).Value = item.UserId;
+                }
+
+                // Ajustar ancho de columnas
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        $"Usuarios_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                }
+            }
         }
 
         public async Task<IActionResult> ExportToPdf(string searchString)
@@ -144,6 +187,42 @@ namespace VetScan.Controllers
             document.Close();
 
             return File(memoryStream.ToArray(), "application/pdf", $"Usuarios_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+        }
+
+        // GET: AppUsers
+        public async Task<IActionResult> Index(string searchString)
+        {
+            var query = _context.AppUsers
+                .Include(u => u.Role)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(u =>
+                    u.Username.Contains(searchString) ||
+                    u.FirstName.Contains(searchString) ||
+                    u.LastName.Contains(searchString) ||
+                    u.Email.Contains(searchString) ||
+                    (u.PhoneNumber != null && u.PhoneNumber.Contains(searchString)));
+            }
+
+            var users = await query
+                .OrderBy(u => u.LastName)
+                .ThenBy(u => u.FirstName)
+                .Select(u => new AppUsersListViewModel
+                {
+                    UserId = u.UserId,
+                    Username = u.Username,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    Email = u.Email,
+                    PhoneNumber = u.PhoneNumber,
+                    RoleName = u.Role.RoleName
+                })
+                .ToListAsync();
+
+            ViewData["CurrentFilter"] = searchString;
+            return View(users);
         }
 
         public async Task<IActionResult> ExportDetailsToPdf(int id)

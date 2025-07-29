@@ -1,4 +1,5 @@
-﻿using iText.IO.Font.Constants;
+﻿using ClosedXML.Excel;
+using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
 using iText.Kernel.Geom;
@@ -23,6 +24,93 @@ namespace VetScan.Controllers
         {
             _context = context;
             _logger = logger;
+        }
+
+        public async Task<IActionResult> ExportToExcel(string searchString)
+        {
+            var query = _context.Pets
+                .Include(p => p.Species)
+                .Include(p => p.Breed)
+                .Include(p => p.PetOwner)
+                .ThenInclude(po => po.User)
+                .Where(p => p.IsActive);
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(p =>
+                    p.PetName.Contains(searchString) ||
+                    p.PetCode.Contains(searchString));
+            }
+
+            var pets = await query
+                .Select(p => new PetListViewModel
+                {
+                    PetId = p.PetId,
+                    PetCode = p.PetCode,
+                    PetName = p.PetName,
+                    Species = p.Species.SpeciesName,
+                    Breed = p.Breed != null ? p.Breed.BreedName : null,
+                    OwnerName = $"{p.PetOwner.User.FirstName} {p.PetOwner.User.LastName}",
+                    DateOfBirth = p.DateOfBirth,
+                    GenderDisplay = p.Gender == "M" ? "Macho" : p.Gender == "F" ? "Hembra" : null,
+                    Weight = p.Weight,
+                    Color = p.Color
+                })
+                .ToListAsync();
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Mascotas");
+                var currentRow = 1;
+
+                // Encabezados
+                worksheet.Cell(currentRow, 1).Value = "Código";
+                worksheet.Cell(currentRow, 2).Value = "Nombre";
+                worksheet.Cell(currentRow, 3).Value = "Especie";
+                worksheet.Cell(currentRow, 4).Value = "Raza";
+                worksheet.Cell(currentRow, 5).Value = "Dueño";
+                worksheet.Cell(currentRow, 6).Value = "Fecha Nac.";
+                worksheet.Cell(currentRow, 7).Value = "Edad";
+                worksheet.Cell(currentRow, 8).Value = "Género";
+                worksheet.Cell(currentRow, 9).Value = "Peso (kg)";
+                worksheet.Cell(currentRow, 10).Value = "Color";
+                worksheet.Cell(currentRow, 11).Value = "ID";
+
+                // Formato de encabezados
+                var headerRange = worksheet.Range(currentRow, 1, currentRow, 11);
+                headerRange.Style.Fill.BackgroundColor = XLColor.DarkBlue;
+                headerRange.Style.Font.FontColor = XLColor.White;
+                headerRange.Style.Font.Bold = true;
+
+                // Datos
+                foreach (var item in pets)
+                {
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = item.PetCode;
+                    worksheet.Cell(currentRow, 2).Value = item.PetName;
+                    worksheet.Cell(currentRow, 3).Value = item.Species;
+                    worksheet.Cell(currentRow, 4).Value = item.Breed ?? "N/A";
+                    worksheet.Cell(currentRow, 5).Value = item.OwnerName;
+                    worksheet.Cell(currentRow, 6).Value = item.DateOfBirth?.ToString("dd/MM/yyyy") ?? "N/A";
+                    worksheet.Cell(currentRow, 7).Value = item.AgeDisplay;
+                    worksheet.Cell(currentRow, 8).Value = item.GenderDisplay ?? "N/A";
+                    worksheet.Cell(currentRow, 9).Value = item.Weight;
+                    worksheet.Cell(currentRow, 10).Value = item.Color ?? "N/A";
+                    worksheet.Cell(currentRow, 11).Value = item.PetId;
+                }
+
+                // Ajustar ancho de columnas
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        $"Mascotas_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                }
+            }
         }
 
         public async Task<IActionResult> ExportToPdf(string searchString)

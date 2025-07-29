@@ -1,4 +1,5 @@
 ﻿// BreedsController.cs
+using ClosedXML.Excel;
 using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
@@ -24,6 +25,83 @@ namespace VetScan.Controllers
         {
             _context = context;
             _logger = logger;
+        }
+
+        public async Task<IActionResult> ExportToExcel(string searchString)
+        {
+            var query = _context.Breeds
+                .Include(b => b.Species)
+                .Where(b => b.IsActive)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(b =>
+                    b.BreedName.Contains(searchString) ||
+                    (b.Description != null && b.Description.Contains(searchString)) ||
+                    b.Species.SpeciesName.Contains(searchString));
+            }
+
+            var breeds = await query
+                .OrderBy(b => b.Species.SpeciesName)
+                .ThenBy(b => b.BreedName)
+                .Select(b => new BreedListViewModel
+                {
+                    BreedId = b.BreedId,
+                    BreedName = b.BreedName,
+                    SpeciesName = b.Species.SpeciesName,
+                    Description = b.Description,
+                    IsActive = b.IsActive
+                })
+                .ToListAsync();
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Razas");
+                var currentRow = 1;
+
+                // Encabezados
+                worksheet.Cell(currentRow, 1).Value = "Nombre";
+                worksheet.Cell(currentRow, 2).Value = "Especie";
+                worksheet.Cell(currentRow, 3).Value = "Descripción";
+                worksheet.Cell(currentRow, 4).Value = "Estado";
+                worksheet.Cell(currentRow, 5).Value = "ID";
+
+                // Formato de encabezados
+                var headerRange = worksheet.Range(currentRow, 1, currentRow, 5);
+                headerRange.Style.Fill.BackgroundColor = XLColor.DarkBlue;
+                headerRange.Style.Font.FontColor = XLColor.White;
+                headerRange.Style.Font.Bold = true;
+
+                // Datos
+                foreach (var item in breeds)
+                {
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = item.BreedName;
+                    worksheet.Cell(currentRow, 2).Value = item.SpeciesName;
+                    worksheet.Cell(currentRow, 3).Value = item.Description ?? "N/A";
+                    worksheet.Cell(currentRow, 4).Value = item.IsActive ? "Activa" : "Inactiva";
+                    worksheet.Cell(currentRow, 5).Value = item.BreedId;
+
+                    // Color para estado
+                    var statusCell = worksheet.Cell(currentRow, 4);
+                    statusCell.Style.Fill.BackgroundColor = item.IsActive ?
+                        XLColor.Green : XLColor.Red;
+                    statusCell.Style.Font.FontColor = XLColor.White;
+                }
+
+                // Ajustar ancho de columnas
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        $"Razas_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                }
+            }
         }
 
         public async Task<IActionResult> ExportToPdf(string searchString)

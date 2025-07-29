@@ -1,4 +1,5 @@
-﻿using iText.IO.Font.Constants;
+﻿using ClosedXML.Excel;
+using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
 using iText.Kernel.Geom;
@@ -23,6 +24,78 @@ namespace VetScan.Controllers
         {
             _context = context;
             _logger = logger;
+        }
+
+        public async Task<IActionResult> ExportToExcel(string searchString)
+        {
+            var query = _context.UserRoles.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(r =>
+                    r.RoleName.Contains(searchString) ||
+                    (r.Description != null && r.Description.Contains(searchString)));
+            }
+
+            var roles = await query
+                .OrderBy(r => r.RoleName)
+                .Select(r => new UserRoleListViewModel
+                {
+                    RoleId = r.RoleId,
+                    RoleName = r.RoleName,
+                    Description = r.Description,
+                    IsActive = r.IsActive,
+                    UserCount = r.Users.Count
+                })
+                .ToListAsync();
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("RolesUsuario");
+                var currentRow = 1;
+
+                // Encabezados
+                worksheet.Cell(currentRow, 1).Value = "Nombre";
+                worksheet.Cell(currentRow, 2).Value = "Descripción";
+                worksheet.Cell(currentRow, 3).Value = "Usuarios";
+                worksheet.Cell(currentRow, 4).Value = "Estado";
+                worksheet.Cell(currentRow, 5).Value = "ID";
+
+                // Formato de encabezados
+                var headerRange = worksheet.Range(currentRow, 1, currentRow, 5);
+                headerRange.Style.Fill.BackgroundColor = XLColor.DarkBlue;
+                headerRange.Style.Font.FontColor = XLColor.White;
+                headerRange.Style.Font.Bold = true;
+
+                // Datos
+                foreach (var item in roles)
+                {
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = item.RoleName;
+                    worksheet.Cell(currentRow, 2).Value = item.Description ?? "N/A";
+                    worksheet.Cell(currentRow, 3).Value = item.UserCount;
+                    worksheet.Cell(currentRow, 4).Value = item.IsActive ? "Activo" : "Inactivo";
+                    worksheet.Cell(currentRow, 5).Value = item.RoleId;
+
+                    // Color para estado
+                    var statusCell = worksheet.Cell(currentRow, 4);
+                    statusCell.Style.Fill.BackgroundColor = item.IsActive ?
+                        XLColor.Green : XLColor.Red;
+                    statusCell.Style.Font.FontColor = XLColor.White;
+                }
+
+                // Ajustar ancho de columnas
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        $"RolesUsuario_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                }
+            }
         }
 
         public async Task<IActionResult> ExportToPdf(string searchString)

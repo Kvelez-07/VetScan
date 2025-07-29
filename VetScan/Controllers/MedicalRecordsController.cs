@@ -1,4 +1,5 @@
 ﻿// Controllers/MedicalRecordsController.cs
+using ClosedXML.Excel;
 using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
@@ -24,6 +25,84 @@ namespace VetScan.Controllers
         {
             _context = context;
             _logger = logger;
+        }
+
+        public async Task<IActionResult> ExportToExcel(string searchString)
+        {
+            IQueryable<MedicalRecord> baseQuery = _context.MedicalRecords
+                .Include(mr => mr.Pet)
+                .ThenInclude(p => p.PetOwner)
+                .ThenInclude(po => po.User);
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                baseQuery = baseQuery.Where(mr =>
+                    mr.RecordNumber.Contains(searchString) ||
+                    mr.Pet.PetName.Contains(searchString));
+            }
+
+            var medicalRecords = await baseQuery.OrderByDescending(mr => mr.CreationDate)
+                .Select(mr => new MedicalRecordListViewModel
+                {
+                    MedicalRecordId = mr.MedicalRecordId,
+                    RecordNumber = mr.RecordNumber,
+                    PetName = mr.Pet.PetName,
+                    PetId = mr.PetId,
+                    OwnerName = $"{mr.Pet.PetOwner.User.FirstName} {mr.Pet.PetOwner.User.LastName}",
+                    CreationDate = mr.CreationDate,
+                    Status = mr.Status
+                })
+                .ToListAsync();
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("RegistrosMedicos");
+                var currentRow = 1;
+
+                // Encabezados
+                worksheet.Cell(currentRow, 1).Value = "Número";
+                worksheet.Cell(currentRow, 2).Value = "Mascota";
+                worksheet.Cell(currentRow, 3).Value = "Dueño";
+                worksheet.Cell(currentRow, 4).Value = "Fecha Creación";
+                worksheet.Cell(currentRow, 5).Value = "Estado";
+                worksheet.Cell(currentRow, 6).Value = "ID";
+
+                // Formato de encabezados
+                var headerRange = worksheet.Range(currentRow, 1, currentRow, 6);
+                headerRange.Style.Fill.BackgroundColor = XLColor.DarkBlue;
+                headerRange.Style.Font.FontColor = XLColor.White;
+                headerRange.Style.Font.Bold = true;
+
+                // Datos
+                foreach (var item in medicalRecords)
+                {
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = item.RecordNumber;
+                    worksheet.Cell(currentRow, 2).Value = item.PetName;
+                    worksheet.Cell(currentRow, 3).Value = item.OwnerName;
+                    worksheet.Cell(currentRow, 4).Value = item.FormattedCreationDate;
+                    worksheet.Cell(currentRow, 5).Value = item.Status;
+                    worksheet.Cell(currentRow, 6).Value = item.MedicalRecordId;
+
+                    // Color para estado
+                    var statusCell = worksheet.Cell(currentRow, 5);
+                    statusCell.Style.Fill.BackgroundColor =
+                        item.Status == "Active" ? XLColor.Green : XLColor.Red;
+                    statusCell.Style.Font.FontColor = XLColor.White;
+                }
+
+                // Ajustar ancho de columnas
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        $"RegistrosMedicos_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                }
+            }
         }
 
         public async Task<IActionResult> ExportToPdf(string searchString)

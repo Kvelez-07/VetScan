@@ -1,4 +1,5 @@
 ﻿// Controllers/MedicalConsultationsController.cs
+using ClosedXML.Excel;
 using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
@@ -26,6 +27,91 @@ namespace VetScan.Controllers
         {
             _context = context;
             _logger = logger;
+        }
+
+        public async Task<IActionResult> ExportToExcel(string searchString)
+        {
+            var query = _context.MedicalConsultations
+                .Include(mc => mc.MedicalRecord)
+                    .ThenInclude(mr => mr.Pet)
+                .Include(mc => mc.AttendingVeterinarian)
+                    .ThenInclude(v => v.User)
+                .OrderByDescending(mc => mc.ConsultationDate)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(mc =>
+                    mc.MedicalRecord.Pet.PetName.Contains(searchString) ||
+                    (mc.AttendingVeterinarian.User.FirstName + " " + mc.AttendingVeterinarian.User.LastName).Contains(searchString));
+            }
+
+            var consultations = await query
+                .Select(mc => new MedicalConsultationListViewModel
+                {
+                    ConsultationId = mc.ConsultationId,
+                    RecordNumber = mc.MedicalRecord.RecordNumber,
+                    PetName = mc.MedicalRecord.Pet.PetName,
+                    VeterinarianName = $"{mc.AttendingVeterinarian.User.FirstName} {mc.AttendingVeterinarian.User.LastName}",
+                    ConsultationDate = mc.ConsultationDate,
+                    ConsultationType = mc.ConsultationType,
+                    Status = mc.Status
+                })
+                .ToListAsync();
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Consultas");
+                var currentRow = 1;
+
+                // Encabezados
+                worksheet.Cell(currentRow, 1).Value = "Fecha";
+                worksheet.Cell(currentRow, 2).Value = "Mascota";
+                worksheet.Cell(currentRow, 3).Value = "Registro";
+                worksheet.Cell(currentRow, 4).Value = "Veterinario";
+                worksheet.Cell(currentRow, 5).Value = "Tipo";
+                worksheet.Cell(currentRow, 6).Value = "Estado";
+                worksheet.Cell(currentRow, 7).Value = "ID";
+
+                // Formato de encabezados
+                var headerRange = worksheet.Range(currentRow, 1, currentRow, 7);
+                headerRange.Style.Fill.BackgroundColor = XLColor.DarkBlue;
+                headerRange.Style.Font.FontColor = XLColor.White;
+                headerRange.Style.Font.Bold = true;
+
+                // Datos
+                foreach (var item in consultations)
+                {
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = item.FormattedDate;
+                    worksheet.Cell(currentRow, 2).Value = item.PetName;
+                    worksheet.Cell(currentRow, 3).Value = item.RecordNumber;
+                    worksheet.Cell(currentRow, 4).Value = item.VeterinarianName;
+                    worksheet.Cell(currentRow, 5).Value = item.ConsultationType;
+                    worksheet.Cell(currentRow, 6).Value = item.Status;
+                    worksheet.Cell(currentRow, 7).Value = item.ConsultationId;
+
+                    // Color para estado
+                    var statusCell = worksheet.Cell(currentRow, 6);
+                    statusCell.Style.Fill.BackgroundColor =
+                        item.Status == "Completed" ? XLColor.Green :
+                        item.Status == "Pending" ? XLColor.Yellow :
+                        XLColor.Red;
+                    statusCell.Style.Font.FontColor = XLColor.White;
+                }
+
+                // Ajustar ancho de columnas
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        $"ConsultasMedicas_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                }
+            }
         }
 
         public async Task<IActionResult> ExportToPdf(string searchString)
