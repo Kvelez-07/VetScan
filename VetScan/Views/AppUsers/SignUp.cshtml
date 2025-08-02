@@ -1,5 +1,4 @@
 ﻿@model VetScan.ViewModels.SignUpViewModel
-
 @{
     ViewData["Title"] = "Registro de Usuario";
 }
@@ -20,7 +19,7 @@
                         </div>
                     }
 
-                    <form asp-action="SignUp" method="post">
+                    <form asp-action="SignUp" id="signupForm">
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                         <div class="mb-3">
@@ -60,13 +59,24 @@
                             <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                         </div>
 
-                        <div class="mb-4">
+                        <div class="mb-3">
                             <label asp-for="RoleId" class="form-label">Rol</label>
                             <select asp-for="RoleId" class="form-select" asp-items="@(new SelectList(ViewBag.Roles, "RoleId", "RoleName"))">
                                 <option value="">-- Seleccione un rol --</option>
                             </select>
                             <span asp-validation-for="RoleId" class="text-danger"></span>
                         </div>
+
+                        <div class="mb-4">
+                            <div class="g-recaptcha"
+                                 data-sitekey="6LcEiZcrAAAAAG8O6RiFcZWrQw8ZEmit9frFjtTG"
+                                 data-callback="onRecaptchaSuccess"
+                                 data-error-callback="onRecaptchaError"
+                                 data-expired-callback="onRecaptchaExpired"></div>
+                            @Html.ValidationMessage("ReCAPTCHA", new { @class = "text-danger" })
+                        </div>
+
+                        <input type="hidden" asp-for="RecaptchaToken" id="recaptchaToken" />
 
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">Registrarse</button>
@@ -85,4 +95,35 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+    <script>
+        // reCAPTCHA callbacks
+        function onRecaptchaSuccess(token) {
+            document.getElementById('recaptchaToken').value = token;
+        }
+
+        function onRecaptchaError() {
+            document.getElementById('recaptchaToken').value = '';
+            alert('Error al completar el reCAPTCHA. Por favor intente nuevamente.');
+        }
+
+        function onRecaptchaExpired() {
+            document.getElementById('recaptchaToken').value = '';
+            grecaptcha.reset();
+        }
+
+        // Force challenge in development
+        document.addEventListener('DOMContentLoaded', function() {
+            // Only force challenges in development
+            if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+                setTimeout(function() {
+                    if (typeof grecaptcha !== 'undefined') {
+                        grecaptcha.reset();
+                    }
+                }, 2000);
+            }
+        });
+    </script>
 }

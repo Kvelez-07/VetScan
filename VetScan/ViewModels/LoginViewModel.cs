@@ -10,5 +10,7 @@ namespace VetScan.ViewModels
         [Required(ErrorMessage = "La contraseña es obligatoria")]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
+
+        public string? RecaptchaToken { get; set; }
     }
 }

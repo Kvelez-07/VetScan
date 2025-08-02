@@ -16,12 +16,11 @@ namespace VetScan.Controllers
         public IActionResult Index()
         {
             // Verificar si existe la variable de sesión UserId
-            //if (HttpContext.Session.GetInt32("UserId") == null)
-            //{
-            //    // Si no está logueado, redirigir al login
-            //    return RedirectToAction("Login", "AppUsers");
-            //}
-
+            if (HttpContext.Session.GetInt32("UserId") == null)
+            {
+                // Si no está logueado, redirigir al login
+                return RedirectToAction("Login", "AppUsers");
+            }
             // Si está logueado, mostrar la vista normal
             return View();
         }

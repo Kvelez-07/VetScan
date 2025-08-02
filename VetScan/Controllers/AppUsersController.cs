@@ -1,4 +1,5 @@
-﻿using ClosedXML.Excel;
+﻿using AspNetCore.ReCaptcha;
+using ClosedXML.Excel;
 using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
@@ -511,6 +512,8 @@ namespace VetScan.Controllers
 
         // POST: /AppUsers/Login
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ValidateReCaptcha]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (!ModelState.IsValid)
@@ -519,7 +522,14 @@ namespace VetScan.Controllers
             }
 
             var user = await _context.AppUsers
+                .Include(u => u.Role) // Ensure Role is loaded
                 .FirstOrDefaultAsync(u => u.Username == model.Username && u.Password == model.Password);
+
+            if (string.IsNullOrEmpty(model.RecaptchaToken))
+            {
+                ModelState.AddModelError("", "Por favor complete la verificación reCAPTCHA.");
+                return View(model);
+            }
 
             if (user == null)
             {
@@ -527,14 +537,28 @@ namespace VetScan.Controllers
                 return View(model);
             }
 
+            // Verify Role exists
+            if (user.Role == null)
+            {
+                ModelState.AddModelError("", "El usuario no tiene un rol asignado");
+                return View(model);
+            }
+
+            // Store user info in session
             HttpContext.Session.SetInt32("UserId", user.UserId);
+            HttpContext.Session.SetString("Username", user.Username);
+            HttpContext.Session.SetString("Email", user.Email ?? string.Empty);
+            HttpContext.Session.SetString("Role", user.Role.RoleName);
+
             return RedirectToAction("Index", "Home");
         }
 
         // GET: /AppUsers/Logout
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Logout()
         {
-            HttpContext.Session.Remove("UserId");
+            HttpContext.Session.Clear();
             return RedirectToAction("Index", "Home");
         }
 
@@ -547,12 +571,20 @@ namespace VetScan.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [ValidateReCaptcha]
         public async Task<IActionResult> SignUp(SignUpViewModel model)
         {
             ViewBag.Roles = _context.UserRoles.ToList();
 
             if (!ModelState.IsValid)
                 return View(model);
+
+            // Verify reCAPTCHA
+            if (string.IsNullOrEmpty(model.RecaptchaToken))
+            {
+                ModelState.AddModelError("", "Por favor complete la verificación reCAPTCHA.");
+                return View(model);
+            }
 
             try
             {
@@ -791,10 +823,18 @@ namespace VetScan.Controllers
         // POST: /AppUsers/ChangePassword
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [ValidateReCaptcha]
         public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
         {
             if (!ModelState.IsValid)
             {
+                return View(model);
+            }
+
+            // Verify reCAPTCHA
+            if (string.IsNullOrEmpty(model.RecaptchaToken))
+            {
+                ModelState.AddModelError("", "Por favor complete la verificación reCAPTCHA.");
                 return View(model);
             }
 

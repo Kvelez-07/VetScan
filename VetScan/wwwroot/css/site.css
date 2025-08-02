@@ -20,3 +20,29 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+/* Navbar user dropdown */
+.navbar .dropdown-menu {
+    min-width: 200px;
+}
+
+.dropdown-item-text {
+    color: #6c757d;
+    padding: 0.25rem 1.5rem;
+}
+
+/* Logout button styling */
+.dropdown-item button {
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    padding: 0;
+}
+
+/* Icons in dropdown */
+.dropdown-item i {
+    margin-right: 8px;
+    width: 18px;
+    text-align: center;
+}
