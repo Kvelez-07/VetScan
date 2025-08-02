@@ -29,5 +29,7 @@ namespace VetScan.ViewModels
 
         [Required(ErrorMessage = "Debe seleccionar un rol")]
         public int RoleId { get; set; }
+
+        public string? RecaptchaToken { get; set; }
     }
 }

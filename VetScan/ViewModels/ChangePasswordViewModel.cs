@@ -20,5 +20,7 @@ namespace VetScan.ViewModels
         [DataType(DataType.Password)]
         [Compare("NewPassword", ErrorMessage = "Las contraseñas no coinciden")]
         public string ConfirmPassword { get; set; } = string.Empty;
+
+        public string? RecaptchaToken { get; set; }
     }
 }

@@ -12,20 +12,31 @@
                     <h4 class="text-center">Iniciar Sesión</h4>
                 </div>
                 <div class="card-body">
-                    <form asp-action="Login">
+                    <form asp-action="Login" id="loginForm">
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                         <div class="form-group mb-3">
-                            <label asp-for="Username" class="control-label"></label>
+                            <label asp-for="Username" class="control-label">Usuario</label>
                             <input asp-for="Username" class="form-control" />
                             <span asp-validation-for="Username" class="text-danger"></span>
                         </div>
 
                         <div class="form-group mb-3">
-                            <label asp-for="Password" class="control-label"></label>
+                            <label asp-for="Password" class="control-label">Contraseña</label>
                             <input asp-for="Password" type="password" class="form-control" />
                             <span asp-validation-for="Password" class="text-danger"></span>
                         </div>
+
+                        <div class="mb-3">
+                            <div class="g-recaptcha"
+                                 data-sitekey="6LcEiZcrAAAAAG8O6RiFcZWrQw8ZEmit9frFjtTG"
+                                 data-callback="onRecaptchaSuccess"
+                                 data-error-callback="onRecaptchaError"
+                                 data-expired-callback="onRecaptchaExpired"></div>
+                            @Html.ValidationMessage("ReCaptcha", new { @class = "text-danger" })
+                        </div>
+
+                        <input type="hidden" asp-for="RecaptchaToken" id="recaptchaToken" />
 
                         <div class="form-group">
                             <button type="submit" class="btn btn-primary w-100">Ingresar</button>
@@ -47,4 +58,35 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+    <script>
+        // reCAPTCHA callbacks
+        function onRecaptchaSuccess(token) {
+            document.getElementById('recaptchaToken').value = token;
+        }
+
+        function onRecaptchaError() {
+            document.getElementById('recaptchaToken').value = '';
+            alert('Error al completar el reCAPTCHA. Por favor intente nuevamente.');
+        }
+
+        function onRecaptchaExpired() {
+            document.getElementById('recaptchaToken').value = '';
+            grecaptcha.reset();
+        }
+
+        // Force challenge in development
+        document.addEventListener('DOMContentLoaded', function() {
+            // Only force challenges in development
+            if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+                setTimeout(function() {
+                    if (typeof grecaptcha !== 'undefined') {
+                        grecaptcha.reset();
+                    }
+                }, 2000);
+            }
+        });
+    </script>
 }
