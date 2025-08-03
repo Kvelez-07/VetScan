@@ -215,10 +215,7 @@ namespace VetScan.Controllers
                 .Include(r => r.Users)
                 .FirstOrDefaultAsync(r => r.RoleId == id);
 
-            if (role == null)
-            {
-                return NotFound();
-            }
+            if (role == null) return NotFound();
 
             // Configuración del PDF
             var memoryStream = new MemoryStream();
@@ -301,10 +298,7 @@ namespace VetScan.Controllers
                 .Include(r => r.Users)
                 .FirstOrDefaultAsync(r => r.RoleId == id);
 
-            if (role == null)
-            {
-                return NotFound();
-            }
+            if (role == null) return NotFound();
 
             // Configurar la URL para la vista
             var request = HttpContext.Request;
@@ -370,19 +364,13 @@ namespace VetScan.Controllers
         // GET: UserRoles/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var role = await _context.UserRoles
                 .Include(r => r.Users)
                 .FirstOrDefaultAsync(m => m.RoleId == id);
 
-            if (role == null)
-            {
-                return NotFound();
-            }
+            if (role == null) return NotFound();
 
             var viewModel = new UserRoleListViewModel
             {
@@ -432,16 +420,10 @@ namespace VetScan.Controllers
         // GET: UserRoles/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var role = await _context.UserRoles.FindAsync(id);
-            if (role == null)
-            {
-                return NotFound();
-            }
+            if (role == null) return NotFound();
 
             var model = new UserRoleFormViewModel
             {
@@ -459,20 +441,14 @@ namespace VetScan.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, UserRoleFormViewModel model)
         {
-            if (id != model.RoleId)
-            {
-                return NotFound();
-            }
+            if (id != model.RoleId) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     var role = await _context.UserRoles.FindAsync(id);
-                    if (role == null)
-                    {
-                        return NotFound();
-                    }
+                    if (role == null) return NotFound();
 
                     role.RoleName = model.RoleName;
                     role.Description = model.Description;
@@ -495,19 +471,13 @@ namespace VetScan.Controllers
         // GET: UserRoles/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var role = await _context.UserRoles
                 .Include(r => r.Users)
                 .FirstOrDefaultAsync(m => m.RoleId == id);
 
-            if (role == null)
-            {
-                return NotFound();
-            }
+            if (role == null) return NotFound();
 
             return View(role);
         }

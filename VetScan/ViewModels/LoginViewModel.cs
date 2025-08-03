@@ -4,9 +4,11 @@ namespace VetScan.ViewModels
 {
     public class LoginViewModel
     {
-        [Required(ErrorMessage = "El nombre de usuario es obligatorio")]
-        public string Username { get; set; } = string.Empty;
+        [Display(Name = "Usuario o Correo Electrónico")]
+        [Required(ErrorMessage = "El usuario o correo electrónico es obligatorio")]
+        public string UsernameOrEmail { get; set; } = string.Empty;
 
+        [Display(Name = "Contraseña")]
         [Required(ErrorMessage = "La contraseña es obligatoria")]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;

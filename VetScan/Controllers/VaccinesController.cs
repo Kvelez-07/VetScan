@@ -252,10 +252,7 @@ namespace VetScan.Controllers
                 .Include(v => v.Species)
                 .FirstOrDefaultAsync(v => v.VaccineId == id);
 
-            if (vaccine == null)
-            {
-                return NotFound();
-            }
+            if (vaccine == null) return NotFound();
 
             // Configuración del PDF
             var memoryStream = new MemoryStream();
@@ -390,10 +387,7 @@ namespace VetScan.Controllers
                 .Include(v => v.Species)
                 .FirstOrDefaultAsync(v => v.VaccineId == id);
 
-            if (vaccine == null)
-            {
-                return NotFound();
-            }
+            if (vaccine == null) return NotFound();
 
             // Configurar la URL para la vista
             var request = HttpContext.Request;
@@ -459,19 +453,13 @@ namespace VetScan.Controllers
         // GET: Vaccines/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var vaccine = await _context.Vaccines
                 .Include(v => v.Species)
                 .FirstOrDefaultAsync(m => m.VaccineId == id);
 
-            if (vaccine == null)
-            {
-                return NotFound();
-            }
+            if (vaccine == null) return NotFound();
 
             var viewModel = new VaccineListViewModel
             {
@@ -543,16 +531,10 @@ namespace VetScan.Controllers
         // GET: Vaccines/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var vaccine = await _context.Vaccines.FindAsync(id);
-            if (vaccine == null)
-            {
-                return NotFound();
-            }
+            if (vaccine == null) return NotFound();
 
             var model = new VaccineFormViewModel
             {
@@ -576,20 +558,14 @@ namespace VetScan.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, VaccineFormViewModel model)
         {
-            if (id != model.VaccineId)
-            {
-                return NotFound();
-            }
+            if (id != model.VaccineId) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     var vaccine = await _context.Vaccines.FindAsync(id);
-                    if (vaccine == null)
-                    {
-                        return NotFound();
-                    }
+                    if (vaccine == null) return NotFound();
 
                     vaccine.VaccineName = model.VaccineName;
                     vaccine.Manufacturer = model.Manufacturer;

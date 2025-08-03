@@ -279,10 +279,7 @@ namespace VetScan.Controllers
                     .ThenInclude(vet => vet.User)
                 .FirstOrDefaultAsync(v => v.VaccinationId == id);
 
-            if (vaccination == null)
-            {
-                return NotFound();
-            }
+            if (vaccination == null) return NotFound();
 
             // Configuración del PDF
             var memoryStream = new MemoryStream();
@@ -440,10 +437,7 @@ namespace VetScan.Controllers
                     .ThenInclude(vet => vet.User)
                 .FirstOrDefaultAsync(v => v.VaccinationId == id);
 
-            if (vaccination == null)
-            {
-                return NotFound();
-            }
+            if (vaccination == null) return NotFound();
 
             // Configurar la URL para la vista
             var request = HttpContext.Request;
@@ -509,10 +503,7 @@ namespace VetScan.Controllers
         // GET: VaccinationHistories/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var vaccination = await _context.VaccinationHistories
                 .Include(v => v.Pet)
@@ -521,10 +512,7 @@ namespace VetScan.Controllers
                     .ThenInclude(vet => vet.User)
                 .FirstOrDefaultAsync(m => m.VaccinationId == id);
 
-            if (vaccination == null)
-            {
-                return NotFound();
-            }
+            if (vaccination == null) return NotFound();
 
             var viewModel = new VaccinationHistoryListViewModel
             {
@@ -634,20 +622,14 @@ namespace VetScan.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, VaccinationHistoryFormViewModel model)
         {
-            if (id != model.VaccinationId)
-            {
-                return NotFound();
-            }
+            if (id != model.VaccinationId) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     var vaccination = await _context.VaccinationHistories.FindAsync(id);
-                    if (vaccination == null)
-                    {
-                        return NotFound();
-                    }
+                    if (vaccination == null) return NotFound();
 
                     vaccination.VaccinationDate = model.VaccinationDate;
                     vaccination.BatchNumber = model.BatchNumber;
@@ -674,10 +656,7 @@ namespace VetScan.Controllers
         // GET: VaccinationHistories/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var vaccination = await _context.VaccinationHistories
                 .Include(v => v.Pet)
@@ -686,10 +665,7 @@ namespace VetScan.Controllers
                     .ThenInclude(vet => vet.User)
                 .FirstOrDefaultAsync(m => m.VaccinationId == id);
 
-            if (vaccination == null)
-            {
-                return NotFound();
-            }
+            if (vaccination == null) return NotFound();
 
             return View(vaccination);
         }

@@ -256,10 +256,7 @@ namespace VetScan.Controllers
                 .ThenInclude(po => po.User)
                 .FirstOrDefaultAsync(p => p.PetId == id && p.IsActive);
 
-            if (pet == null)
-            {
-                return NotFound();
-            }
+            if (pet == null) return NotFound();
 
             // Configuración del PDF
             var memoryStream = new MemoryStream();
@@ -364,10 +361,7 @@ namespace VetScan.Controllers
                 .ThenInclude(po => po.User)
                 .FirstOrDefaultAsync(p => p.PetId == id && p.IsActive);
 
-            if (pet == null)
-            {
-                return NotFound();
-            }
+            if (pet == null) return NotFound();
 
             // Configurar la URL para la vista
             var request = HttpContext.Request;
@@ -433,10 +427,7 @@ namespace VetScan.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var pet = await _context.Pets
                 .Include(p => p.PetOwner)
@@ -445,10 +436,7 @@ namespace VetScan.Controllers
                 .Include(p => p.Breed)
                 .FirstOrDefaultAsync(m => m.PetId == id && m.IsActive);
 
-            if (pet == null)
-            {
-                return NotFound();
-            }
+            if (pet == null) return NotFound();
 
             var viewModel = new PetListViewModel
             {
@@ -492,7 +480,7 @@ namespace VetScan.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> SignUp()
+        public async Task<IActionResult> Create()
         {
             // Obtener solo los usuarios que son PetOwners
             var petOwners = await _context.PetOwners
@@ -518,7 +506,7 @@ namespace VetScan.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SignUp(PetFormViewModel model)
+        public async Task<IActionResult> Create(PetFormViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -574,10 +562,7 @@ namespace VetScan.Controllers
                 .Include(p => p.Breed)
                 .FirstOrDefaultAsync(p => p.PetId == id);
 
-            if (pet == null)
-            {
-                return NotFound();
-            }
+            if (pet == null) return NotFound();
 
             await ReloadViewData(); // Cargar datos para los dropdowns
 
@@ -604,10 +589,7 @@ namespace VetScan.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, PetFormViewModel model)
         {
-            if (id != model.PetId)
-            {
-                return NotFound();
-            }
+            if (id != model.PetId) return NotFound();
 
             if (!ModelState.IsValid)
             {
@@ -619,10 +601,7 @@ namespace VetScan.Controllers
             try
             {
                 var pet = await _context.Pets.FindAsync(id);
-                if (pet == null)
-                {
-                    return NotFound();
-                }
+                if (pet == null) return NotFound();
 
                 // Actualizar propiedades editables
                 pet.PetName = model.PetName;
@@ -642,14 +621,8 @@ namespace VetScan.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!PetExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                if (!PetExists(id)) return NotFound();
+                else throw;
             }
             catch (Exception ex)
             {
@@ -670,10 +643,7 @@ namespace VetScan.Controllers
             return owner != null ? $"{owner.User.FirstName} {owner.User.LastName}" : "Dueño desconocido";
         }
 
-        private bool PetExists(int id)
-        {
-            return _context.Pets.Any(e => e.PetId == id);
-        }
+        private bool PetExists(int id) => _context.Pets.Any(e => e.PetId == id);
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -682,10 +652,7 @@ namespace VetScan.Controllers
             try
             {
                 var pet = await _context.Pets.FindAsync(id);
-                if (pet == null)
-                {
-                    return NotFound();
-                }
+                if (pet == null) return NotFound();
 
                 pet.IsActive = false; // Soft delete
                 await _context.SaveChangesAsync();
@@ -721,10 +688,6 @@ namespace VetScan.Controllers
                 .ToListAsync();
         }
 
-        private string GeneratePetCode()
-        {
-            // Generar un código único para la mascota (ejemplo simple)
-            return $"PET-{DateTime.Now:yyyyMMddHHmmss}";
-        }
+        private string GeneratePetCode() => $"PET-{DateTime.Now:yyyyMMddHHmmss}";
     }
 }

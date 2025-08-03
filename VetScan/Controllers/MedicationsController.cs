@@ -216,10 +216,7 @@ namespace VetScan.Controllers
             var medication = await _context.Medications
                 .FirstOrDefaultAsync(m => m.MedicationId == id && m.IsActive);
 
-            if (medication == null)
-            {
-                return NotFound();
-            }
+            if (medication == null) return NotFound();
 
             // Configuración del PDF
             var memoryStream = new MemoryStream();
@@ -297,10 +294,7 @@ namespace VetScan.Controllers
             var medication = await _context.Medications
                 .FirstOrDefaultAsync(m => m.MedicationId == id && m.IsActive);
 
-            if (medication == null)
-            {
-                return NotFound();
-            }
+            if (medication == null) return NotFound();
 
             // Configurar la URL para la vista
             var request = HttpContext.Request;
@@ -366,18 +360,12 @@ namespace VetScan.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var medication = await _context.Medications
                 .FirstOrDefaultAsync(m => m.MedicationId == id && m.IsActive);
 
-            if (medication == null)
-            {
-                return NotFound();
-            }
+            if (medication == null) return NotFound();
 
             var viewModel = new MedicationListViewModel
             {
@@ -439,16 +427,10 @@ namespace VetScan.Controllers
         // GET: Medications/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var medication = await _context.Medications.FindAsync(id);
-            if (medication == null)
-            {
-                return NotFound();
-            }
+            if (medication == null) return NotFound();
 
             var model = new MedicationFormViewModel
             {
@@ -468,20 +450,14 @@ namespace VetScan.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, MedicationFormViewModel model)
         {
-            if (id != model.MedicationId)
-            {
-                return NotFound();
-            }
+            if (id != model.MedicationId) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     var medication = await _context.Medications.FindAsync(id);
-                    if (medication == null)
-                    {
-                        return NotFound();
-                    }
+                    if (medication == null) return NotFound();
 
                     medication.MedicationName = model.MedicationName;
                     medication.GenericName = model.GenericName;

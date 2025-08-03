@@ -1,4 +1,5 @@
-﻿@model VetScan.ViewModels.BreedListViewModel
+﻿@using VetScan.ViewModels
+@model BreedListViewModel
 @{
     // Verificar si estamos en modo exportación
     var exporting = Context.Request.Query["exporting"].FirstOrDefault() == "true";

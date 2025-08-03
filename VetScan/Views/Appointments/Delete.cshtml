@@ -36,8 +36,9 @@
             </div>
         </div>
         <div class="card-footer">
-            <form asp-action="Delete">
+            <form asp-action="Delete" method="post">
                 <input type="hidden" asp-for="AppointmentId" />
+                @Html.AntiForgeryToken()
                 <div class="d-flex justify-content-end gap-2">
                     <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
                     <button type="submit" class="btn btn-danger">Eliminar</button>

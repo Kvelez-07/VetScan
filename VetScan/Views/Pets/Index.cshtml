@@ -1,4 +1,5 @@
-﻿@model IEnumerable<VetScan.ViewModels.PetListViewModel>
+﻿@using VetScan.ViewModels
+@model IEnumerable<PetListViewModel>
 @{
     ViewData["Title"] = "Lista de Mascotas";
 }
@@ -26,7 +27,7 @@
                 </ul>
             </div>
 
-            <a asp-controller="Pets" asp-action="SignUp" class="btn btn-success">
+            <a asp-controller="Pets" asp-action="Create" class="btn btn-success">
                 <i class="bi bi-plus-circle"></i> Nueva Mascota
             </a>
         </div>

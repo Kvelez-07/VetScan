@@ -264,10 +264,7 @@ namespace VetScan.Controllers
                 .Include(p => p.Medication)
                 .FirstOrDefaultAsync(p => p.PrescriptionId == id);
 
-            if (prescription == null)
-            {
-                return NotFound();
-            }
+            if (prescription == null) return NotFound();
 
             // Configuración del PDF
             var memoryStream = new MemoryStream();
@@ -511,10 +508,7 @@ namespace VetScan.Controllers
         // GET: Prescriptions/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var prescription = await _context.Prescriptions
                 .Include(p => p.Consultation)
@@ -523,10 +517,7 @@ namespace VetScan.Controllers
                 .Include(p => p.Medication)
                 .FirstOrDefaultAsync(m => m.PrescriptionId == id);
 
-            if (prescription == null)
-            {
-                return NotFound();
-            }
+            if (prescription == null) return NotFound();
 
             var viewModel = new PrescriptionListViewModel
             {
@@ -606,20 +597,14 @@ namespace VetScan.Controllers
         // GET: Prescriptions/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var prescription = await _context.Prescriptions
                 .Include(p => p.Consultation)
                 .Include(p => p.Medication)
                 .FirstOrDefaultAsync(p => p.PrescriptionId == id);
 
-            if (prescription == null)
-            {
-                return NotFound();
-            }
+            if (prescription == null) return NotFound();
 
             var model = new PrescriptionFormViewModel
             {
@@ -648,20 +633,14 @@ namespace VetScan.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, PrescriptionFormViewModel model)
         {
-            if (id != model.PrescriptionId)
-            {
-                return NotFound();
-            }
+            if (id != model.PrescriptionId) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     var prescription = await _context.Prescriptions.FindAsync(id);
-                    if (prescription == null)
-                    {
-                        return NotFound();
-                    }
+                    if (prescription == null) return NotFound();
 
                     prescription.Dosage = model.Dosage;
                     prescription.Frequency = model.Frequency;
@@ -692,10 +671,7 @@ namespace VetScan.Controllers
         // GET: Prescriptions/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var prescription = await _context.Prescriptions
                 .Include(p => p.Consultation)
@@ -704,10 +680,7 @@ namespace VetScan.Controllers
                 .Include(p => p.Medication)
                 .FirstOrDefaultAsync(m => m.PrescriptionId == id);
 
-            if (prescription == null)
-            {
-                return NotFound();
-            }
+            if (prescription == null) return NotFound();
 
             return View(prescription);
         }

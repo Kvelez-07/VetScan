@@ -239,10 +239,7 @@ namespace VetScan.Controllers
                     .ThenInclude(v => v.User)
                 .FirstOrDefaultAsync(a => a.AppointmentId == id);
 
-            if (appointment == null)
-            {
-                return NotFound();
-            }
+            if (appointment == null) return NotFound();
 
             // Configuración del PDF
             var memoryStream = new MemoryStream();
@@ -394,10 +391,7 @@ namespace VetScan.Controllers
                     .ThenInclude(v => v.User)
                 .FirstOrDefaultAsync(a => a.AppointmentId == id);
 
-            if (appointment == null)
-            {
-                return NotFound();
-            }
+            if (appointment == null) return NotFound();
 
             // Configurar la URL para la vista
             var request = HttpContext.Request;
@@ -463,10 +457,7 @@ namespace VetScan.Controllers
         // GET: Appointments/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var appointment = await _context.Appointments
                 .Include(a => a.Pet)
@@ -474,10 +465,7 @@ namespace VetScan.Controllers
                     .ThenInclude(v => v.User)
                 .FirstOrDefaultAsync(m => m.AppointmentId == id);
 
-            if (appointment == null)
-            {
-                return NotFound();
-            }
+            if (appointment == null) return NotFound();
 
             var viewModel = new AppointmentListViewModel
             {
@@ -550,16 +538,10 @@ namespace VetScan.Controllers
         // GET: Appointments/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var appointment = await _context.Appointments.FindAsync(id);
-            if (appointment == null)
-            {
-                return NotFound();
-            }
+            if (appointment == null) return NotFound();
 
             var model = new AppointmentFormViewModel
             {
@@ -590,20 +572,14 @@ namespace VetScan.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, AppointmentFormViewModel model)
         {
-            if (id != model.AppointmentId)
-            {
-                return NotFound();
-            }
+            if (id != model.AppointmentId) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     var appointment = await _context.Appointments.FindAsync(id);
-                    if (appointment == null)
-                    {
-                        return NotFound();
-                    }
+                    if (appointment == null) return NotFound();
 
                     appointment.AppointmentDate = model.AppointmentDate;
                     appointment.Duration = model.Duration;
@@ -658,12 +634,23 @@ namespace VetScan.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var appointment = await _context.Appointments.FindAsync(id);
-            if (appointment != null)
+            if (appointment == null)
+            {
+                return NotFound();
+            }
+
+            try
             {
                 _context.Appointments.Remove(appointment);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Cita eliminada exitosamente";
             }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Error al eliminar cita");
+                TempData["ErrorMessage"] = "Error al eliminar la cita. Por favor intente nuevamente.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 

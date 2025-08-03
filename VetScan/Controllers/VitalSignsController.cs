@@ -381,10 +381,7 @@ namespace VetScan.Controllers
                         .ThenInclude(mr => mr.Pet)
                 .FirstOrDefaultAsync(vs => vs.VitalSignId == id);
 
-            if (vitalSign == null)
-            {
-                return NotFound();
-            }
+            if (vitalSign == null) return NotFound();
 
             // Configurar la URL para la vista
             var request = HttpContext.Request;
@@ -450,10 +447,7 @@ namespace VetScan.Controllers
         // GET: VitalSigns/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var vitalSign = await _context.VitalSigns
                 .Include(vs => vs.Consultation)
@@ -464,10 +458,7 @@ namespace VetScan.Controllers
                         .ThenInclude(v => v.User)
                 .FirstOrDefaultAsync(m => m.VitalSignId == id);
 
-            if (vitalSign == null)
-            {
-                return NotFound();
-            }
+            if (vitalSign == null) return NotFound();
 
             var viewModel = new VitalSignListViewModel
             {
@@ -539,19 +530,13 @@ namespace VetScan.Controllers
         // GET: VitalSigns/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var vitalSign = await _context.VitalSigns
                 .Include(vs => vs.Consultation)
                 .FirstOrDefaultAsync(vs => vs.VitalSignId == id);
 
-            if (vitalSign == null)
-            {
-                return NotFound();
-            }
+            if (vitalSign == null) return NotFound();
 
             var model = new VitalSignFormViewModel
             {
@@ -577,20 +562,14 @@ namespace VetScan.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, VitalSignFormViewModel model)
         {
-            if (id != model.VitalSignId)
-            {
-                return NotFound();
-            }
+            if (id != model.VitalSignId) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     var vitalSign = await _context.VitalSigns.FindAsync(id);
-                    if (vitalSign == null)
-                    {
-                        return NotFound();
-                    }
+                    if (vitalSign == null) return NotFound();
 
                     vitalSign.Temperature = model.Temperature;
                     vitalSign.HeartRate = model.HeartRate;
@@ -620,10 +599,7 @@ namespace VetScan.Controllers
         // GET: VitalSigns/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var vitalSign = await _context.VitalSigns
                 .Include(vs => vs.Consultation)
@@ -631,10 +607,7 @@ namespace VetScan.Controllers
                         .ThenInclude(mr => mr.Pet)
                 .FirstOrDefaultAsync(m => m.VitalSignId == id);
 
-            if (vitalSign == null)
-            {
-                return NotFound();
-            }
+            if (vitalSign == null) return NotFound();
 
             return View(vitalSign);
         }

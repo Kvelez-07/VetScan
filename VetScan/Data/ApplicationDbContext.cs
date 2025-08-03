@@ -24,6 +24,7 @@ namespace VetScan.Data
         public DbSet<Vaccine> Vaccines { get; set; }
         public DbSet<VaccinationHistory> VaccinationHistories { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

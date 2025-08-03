@@ -252,10 +252,7 @@ namespace VetScan.Controllers
                     .ThenInclude(v => v.User)
                 .FirstOrDefaultAsync(mc => mc.ConsultationId == id);
 
-            if (consultation == null)
-            {
-                return NotFound();
-            }
+            if (consultation == null) return NotFound();
 
             // Configuración del PDF
             var memoryStream = new MemoryStream();
@@ -382,10 +379,7 @@ namespace VetScan.Controllers
                     .ThenInclude(v => v.User)
                 .FirstOrDefaultAsync(mc => mc.ConsultationId == id);
 
-            if (consultation == null)
-            {
-                return NotFound();
-            }
+            if (consultation == null) return NotFound();
 
             // Configurar la URL para la vista
             var request = HttpContext.Request;
@@ -451,10 +445,7 @@ namespace VetScan.Controllers
         // GET: MedicalConsultations/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var consultation = await _context.MedicalConsultations
                 .Include(mc => mc.MedicalRecord)
@@ -463,10 +454,7 @@ namespace VetScan.Controllers
                     .ThenInclude(v => v.User)
                 .FirstOrDefaultAsync(mc => mc.ConsultationId == id);
 
-            if (consultation == null)
-            {
-                return NotFound();
-            }
+            if (consultation == null) return NotFound();
 
             var viewModel = new MedicalConsultationListViewModel
             {
@@ -538,10 +526,7 @@ namespace VetScan.Controllers
         {
             try
             {
-                if (id == null)
-                {
-                    return NotFound();
-                }
+                if (id == null) return NotFound();
 
                 var consultation = await _context.MedicalConsultations
                     .Include(mc => mc.MedicalRecord)
@@ -598,20 +583,14 @@ namespace VetScan.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, MedicalConsultationFormViewModel model)
         {
-            if (id != model.ConsultationId)
-            {
-                return NotFound();
-            }
+            if (id != model.ConsultationId) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     var consultation = await _context.MedicalConsultations.FindAsync(id);
-                    if (consultation == null)
-                    {
-                        return NotFound();
-                    }
+                    if (consultation == null) return NotFound();
 
                     consultation.ConsultationDate = model.ConsultationDate;
                     consultation.ConsultationType = model.ConsultationType;
@@ -639,10 +618,7 @@ namespace VetScan.Controllers
         // GET: MedicalConsultations/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var consultation = await _context.MedicalConsultations
                 .Include(mc => mc.MedicalRecord)
@@ -650,10 +626,7 @@ namespace VetScan.Controllers
                     .ThenInclude(v => v.User)
                 .FirstOrDefaultAsync(mc => mc.ConsultationId == id);
 
-            if (consultation == null)
-            {
-                return NotFound();
-            }
+            if (consultation == null) return NotFound();
 
             return View(consultation);
         }

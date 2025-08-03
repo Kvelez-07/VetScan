@@ -1,6 +1,8 @@
 using AspNetCore.ReCaptcha;
 using Microsoft.EntityFrameworkCore;
 using VetScan.Data;
+using VetScan.Data.Services;
+using VetScan.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +16,10 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true; // Seguridad básica
     options.Cookie.IsEssential = true; // Obligatorio para GDPR
 });
+
+// Email services
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
 // Google reCAPTCHA configuration
 builder.Services.AddReCaptcha(builder.Configuration.GetSection("ReCaptcha"));
