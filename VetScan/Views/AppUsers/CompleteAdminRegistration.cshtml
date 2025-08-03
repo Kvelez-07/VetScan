@@ -1,8 +1,88 @@
-﻿@model VetScan.ViewModels.AdminFormViewModel
+﻿@using VetScan.ViewModels
+@model AdminFormViewModel
 
 @{
     ViewData["Title"] = "Completar Registro de Administrador";
 }
+
+<style>
+    body {
+        background: linear-gradient(to right, #1e3c72, #2a5298);
+        color: #f5f5f5;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(16px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        color: #fff;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background: linear-gradient(to right, #00c6ff, #0072ff);
+        border-bottom: none;
+        padding: 1.5rem;
+    }
+
+        .card-header h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+    .form-label {
+        font-weight: 500;
+    }
+
+    .form-control,
+    .form-select {
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid #00f0ff;
+        color: #fff;
+        border-radius: 10px;
+        padding: 0.75rem;
+        font-weight: 500;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .form-control::placeholder {
+            color: #ccc;
+            opacity: 0.8;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #00f0ff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 240, 255, 0.25);
+            outline: none;
+        }
+
+    .btn-primary {
+        background: linear-gradient(to right, #00f0ff, #0072ff);
+        border: none;
+        font-weight: bold;
+        padding: 0.75rem;
+        border-radius: 12px;
+        transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+        .btn-primary:hover {
+            background: linear-gradient(to right, #0072ff, #00f0ff);
+            transform: scale(1.02);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+        }
+
+    .text-danger {
+        font-size: 0.9rem;
+    }
+
+    h2.text-center {
+        margin-bottom: 0;
+    }
+</style>
 
 <div class="container mt-5">
     <div class="row justify-content-center">

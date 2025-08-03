@@ -1,54 +1,137 @@
-﻿@model VetScan.ViewModels.LoginViewModel
-
+﻿@using VetScan.ViewModels
+@model LoginViewModel
 @{
     ViewData["Title"] = "Iniciar Sesión";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="text-center">Iniciar Sesión</h4>
+<style>
+    body {
+        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #ffffff;
+    }
+
+    .login-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        box-shadow: 0 0 25px rgba(0, 255, 255, 0.1);
+        padding: 2rem;
+        animation: slideUp 0.8s ease-in-out;
+    }
+
+    .login-header {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #00f0ff;
+        margin-bottom: 1rem;
+        text-shadow: 0 0 8px #00f0ff;
+    }
+
+    .form-control {
+        border-radius: 10px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid #777;
+        color: #fff;
+    }
+
+        .form-control::placeholder {
+            color: #ccc;
+        }
+
+    .form-label {
+        font-weight: 600;
+        color: #c4f1ff;
+    }
+
+    .btn-primary {
+        background: linear-gradient(90deg, #00f0ff, #007bff);
+        border: none;
+        border-radius: 10px;
+        font-weight: bold;
+        box-shadow: 0 0 12px #00f0ff;
+        transition: all 0.3s ease-in-out;
+    }
+
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #007bff, #00f0ff);
+            box-shadow: 0 0 18px #00f0ff;
+        }
+
+    .logo-container img {
+        max-height: 90px;
+        margin-bottom: 1rem;
+        filter: drop-shadow(0 0 10px #00f0ff);
+        animation: pulse 3s infinite ease-in-out;
+    }
+
+    a {
+        color: #00f0ff;
+    }
+
+        a:hover {
+            text-decoration: underline;
+            color: #00c0e0;
+        }
+
+    .text-danger {
+        color: #ff6b6b !important;
+    }
+
+    .g-recaptcha {
+        transform: scale(0.95);
+        transform-origin: 0 0;
+    }
+</style>
+
+<div class="container d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+    <div class="col-md-6 col-lg-4">
+        <div class="login-card">
+            <div class="text-center logo-container">
+                <img src="~/img/vetscan_logo.png" alt="VetScan Logo" />
+            </div>
+
+            <h4 class="text-center login-header">Iniciar Sesión</h4>
+
+            <form asp-action="Login" id="loginForm">
+                <div asp-validation-summary="ModelOnly" class="text-danger text-center mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="UsernameOrEmail" class="form-label">Usuario o Email</label>
+                    <input asp-for="UsernameOrEmail" class="form-control" placeholder="Ej: user@example.com" />
+                    <span asp-validation-for="UsernameOrEmail" class="text-danger"></span>
                 </div>
-                <div class="card-body">
-                    <form asp-action="Login" id="loginForm">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-                        <div class="form-group mb-3">
-                            <label asp-for="Username" class="control-label">Usuario</label>
-                            <input asp-for="Username" class="form-control" />
-                            <span asp-validation-for="Username" class="text-danger"></span>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label asp-for="Password" class="control-label">Contraseña</label>
-                            <input asp-for="Password" type="password" class="form-control" />
-                            <span asp-validation-for="Password" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <div class="g-recaptcha"
-                                 data-sitekey="6LcEiZcrAAAAAG8O6RiFcZWrQw8ZEmit9frFjtTG"
-                                 data-callback="onRecaptchaSuccess"
-                                 data-error-callback="onRecaptchaError"
-                                 data-expired-callback="onRecaptchaExpired"></div>
-                            @Html.ValidationMessage("ReCaptcha", new { @class = "text-danger" })
-                        </div>
-
-                        <input type="hidden" asp-for="RecaptchaToken" id="recaptchaToken" />
-
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-primary w-100">Ingresar</button>
-                        </div>
-                    </form>
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label">Contraseña</label>
+                    <input asp-for="Password" type="password" class="form-control" placeholder="********" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
-                <div class="card-footer text-center">
-                    ¿No tienes cuenta? <a asp-action="SignUp">Regístrate aquí</a>
+
+                <div class="mb-3">
+                    <div class="g-recaptcha"
+                         data-sitekey="6LcEiZcrAAAAAG8O6RiFcZWrQw8ZEmit9frFjtTG"
+                         data-callback="onRecaptchaSuccess"
+                         data-error-callback="onRecaptchaError"
+                         data-expired-callback="onRecaptchaExpired">
+                    </div>
+                    @Html.ValidationMessage("ReCaptcha", new { @class = "text-danger" })
                 </div>
-                <div class="text-center mt-3">
-                    <a asp-action="ChangePassword">Cambiar contraseña</a>
+
+                <input type="hidden" asp-for="RecaptchaToken" id="recaptchaToken" />
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary w-100">Ingresar</button>
                 </div>
+            </form>
+
+            <div class="text-center mt-3">
+                ¿No tienes cuenta? <a asp-action="SignUp" class="fw-bold">Regístrate aquí</a>
+            </div>
+
+            <div class="text-center mt-2">
+                <a asp-action="RequestPasswordReset">¿Olvidaste tu contraseña?</a>
             </div>
         </div>
     </div>
@@ -58,30 +141,23 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-
     <script>
-        // reCAPTCHA callbacks
         function onRecaptchaSuccess(token) {
             document.getElementById('recaptchaToken').value = token;
         }
-
         function onRecaptchaError() {
             document.getElementById('recaptchaToken').value = '';
             alert('Error al completar el reCAPTCHA. Por favor intente nuevamente.');
         }
-
         function onRecaptchaExpired() {
             document.getElementById('recaptchaToken').value = '';
             grecaptcha.reset();
         }
 
-        // Force challenge in development
-        document.addEventListener('DOMContentLoaded', function() {
-            // Only force challenges in development
+        document.addEventListener('DOMContentLoaded', function () {
             if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-                setTimeout(function() {
+                setTimeout(function () {
                     if (typeof grecaptcha !== 'undefined') {
                         grecaptcha.reset();
                     }

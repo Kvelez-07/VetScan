@@ -35,6 +35,12 @@
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <button id="darkModeToggle" class="btn btn-link nav-link" title="Toggle Dark Mode">
+                                <i class="bi bi-moon-stars-fill"></i>
+                            </button>
+                        </li>
+
                         @if (layoutModel.IsAuthenticated)
                         {
                             <!-- Common items for all logged-in users -->

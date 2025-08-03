@@ -11,7 +11,9 @@ using iText.Layout.Properties;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PuppeteerSharp;
+using System.ComponentModel.DataAnnotations;
 using VetScan.Data;
+using VetScan.Data.Services;
 using VetScan.Models;
 using VetScan.ViewModels;
 
@@ -21,11 +23,15 @@ namespace VetScan.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<AppUsersController> _logger;
+        private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
 
-        public AppUsersController(ApplicationDbContext context, ILogger<AppUsersController> logger)
+        public AppUsersController(ApplicationDbContext context, ILogger<AppUsersController> logger, IConfiguration configuration, IEmailService emailService)
         {
             _context = context;
             _logger = logger;
+            _configuration = configuration;
+            _emailService = emailService;
         }
 
         public async Task<IActionResult> ExportToExcel(string searchString)
@@ -233,10 +239,7 @@ namespace VetScan.Controllers
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.UserId == id);
 
-            if (user == null)
-            {
-                return NotFound();
-            }
+            if (user == null) return NotFound();
 
             // Configuración del PDF
             var memoryStream = new MemoryStream();
@@ -307,10 +310,7 @@ namespace VetScan.Controllers
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.UserId == id);
 
-            if (user == null)
-            {
-                return NotFound();
-            }
+            if (user == null) return NotFound();
 
             // Configurar la URL para la vista
             var request = HttpContext.Request;
@@ -376,19 +376,13 @@ namespace VetScan.Controllers
         // GET: AppUsers/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var user = await _context.AppUsers
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.UserId == id);
 
-            if (user == null)
-            {
-                return NotFound();
-            }
+            if (user == null) return NotFound();
 
             var viewModel = new AppUsersListViewModel
             {
@@ -407,16 +401,10 @@ namespace VetScan.Controllers
         // GET: AppUsers/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var user = await _context.AppUsers.FindAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
+            if (user == null) return NotFound();
 
             var viewModel = new AppUsersFormViewModel
             {
@@ -438,20 +426,14 @@ namespace VetScan.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, AppUsersFormViewModel model)
         {
-            if (id != model.UserId)
-            {
-                return NotFound();
-            }
+            if (id != model.UserId) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     var user = await _context.AppUsers.FindAsync(id);
-                    if (user == null)
-                    {
-                        return NotFound();
-                    }
+                    if (user == null) return NotFound();
 
                     // Actualizar propiedades editables
                     user.Username = model.Username;
@@ -479,16 +461,34 @@ namespace VetScan.Controllers
             return View(model);
         }
 
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null) return NotFound();
+            var user = await _context.AppUsers
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.UserId == id);
+            if (user == null) return NotFound();
+
+            var viewModel = new AppUsersListViewModel
+            {
+                UserId = user.UserId,
+                Username = user.Username,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                RoleName = user.Role.RoleName
+            };
+            return View(viewModel);
+        }
+
         // POST: AppUsers/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var user = await _context.AppUsers.FindAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
+            if (user == null) return NotFound();
 
             try
             {
@@ -513,17 +513,9 @@ namespace VetScan.Controllers
         // POST: /AppUsers/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [ValidateReCaptcha]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            var user = await _context.AppUsers
-                .Include(u => u.Role) // Ensure Role is loaded
-                .FirstOrDefaultAsync(u => u.Username == model.Username && u.Password == model.Password);
+            if (!ModelState.IsValid) return View(model);
 
             if (string.IsNullOrEmpty(model.RecaptchaToken))
             {
@@ -531,9 +523,26 @@ namespace VetScan.Controllers
                 return View(model);
             }
 
+            // Determine if the input is an email address
+            var isEmail = new EmailAddressAttribute().IsValid(model.UsernameOrEmail);
+
+            // Find user by username or email
+            var user = await _context.AppUsers
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u =>
+                    (isEmail && u.Email == model.UsernameOrEmail) ||
+                    (!isEmail && u.Username == model.UsernameOrEmail));
+
             if (user == null)
             {
-                ModelState.AddModelError("", "Usuario o contraseña incorrectos");
+                ModelState.AddModelError("", "Usuario/Email o contraseña incorrectos");
+                return View(model);
+            }
+
+            // Verify password (you should use password hashing in production)
+            if (user.Password != model.Password)
+            {
+                ModelState.AddModelError("", "Usuario/Email o contraseña incorrectos");
                 return View(model);
             }
 
@@ -622,7 +631,7 @@ namespace VetScan.Controllers
                     return RedirectToAction("CompletePetOwnerRegistration", new { userId = newUser.UserId });
 
                 TempData["SuccessMessage"] = "¡Registro exitoso!";
-                return RedirectToAction("Login");
+                return RedirectToAction(nameof(Login));
             }
             catch (Exception ex)
             {
@@ -683,7 +692,7 @@ namespace VetScan.Controllers
                 await _context.SaveChangesAsync();
 
                 TempData["SuccessMessage"] = "¡Registro de veterinario completado con éxito!";
-                return RedirectToAction("Login");
+                return RedirectToAction(nameof(Login));
             }
             catch (Exception ex)
             {
@@ -747,7 +756,7 @@ namespace VetScan.Controllers
                 await _context.SaveChangesAsync();
 
                 TempData["SuccessMessage"] = "¡Registro de dueño de mascota completado con éxito!";
-                return RedirectToAction("Login");
+                return RedirectToAction(nameof(Login));
             }
             catch (Exception ex)
             {
@@ -805,7 +814,7 @@ namespace VetScan.Controllers
                 await _context.SaveChangesAsync();
 
                 TempData["SuccessMessage"] = "¡Registro de administrador completado con éxito!";
-                return RedirectToAction("Login");
+                return RedirectToAction(nameof(Login));
             }
             catch (Exception ex)
             {
@@ -853,7 +862,134 @@ namespace VetScan.Controllers
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = "Contraseña actualizada correctamente";
-            return RedirectToAction("Login");
+            return RedirectToAction(nameof(Login));
         }
+
+        [HttpGet]
+        public IActionResult RequestPasswordReset() => View();
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RequestPasswordReset(RequestPasswordResetViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            // Siempre devuelve éxito para no revelar qué emails existen en el sistema
+            var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.Email == model.Email);
+            if (user == null) return RedirectToAction(nameof(ResetEmailSent));
+
+            // Generar token seguro
+            var token = Guid.NewGuid().ToString();
+            var expiration = DateTime.UtcNow.AddHours(1); // 1 hora de expiración
+
+            // Eliminar tokens antiguos para este email
+            var oldTokens = await _context.PasswordResetTokens
+                .Where(t => t.Email == model.Email)
+                .ToListAsync();
+
+            _context.PasswordResetTokens.RemoveRange(oldTokens);
+
+            // Guardar nuevo token
+            var resetToken = new PasswordResetToken
+            {
+                Email = model.Email,
+                Token = token,
+                ExpirationDate = expiration,
+                IsUsed = false
+            };
+
+            _context.PasswordResetTokens.Add(resetToken);
+            await _context.SaveChangesAsync();
+
+            // Crear enlace de reset
+            var resetUrl = Url.Action(
+                "ResetPassword",
+                "AppUsers",
+                new { email = model.Email, token = token },
+                protocol: Request.Scheme);
+
+            // Plantilla de email más profesional
+            var emailSubject = "Instrucciones para restablecer tu contraseña en VetScan";
+            var emailBody = $@"
+    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+        <h2 style='color: #2c3e50;'>Restablecimiento de contraseña</h2>
+        <p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en VetScan.</p>
+        <p>Por favor, haz clic en el siguiente enlace para continuar:</p>
+        <p style='margin: 20px 0;'>
+            <a href='{resetUrl}' style='background-color: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>
+                Restablecer contraseña
+            </a>
+        </p>
+        <p>Si no puedes hacer clic en el botón, copia y pega esta URL en tu navegador:</p>
+        <p><code>{resetUrl}</code></p>
+        <p>Este enlace expirará en 1 hora. Si no solicitaste este cambio, puedes ignorar este mensaje.</p>
+        <p style='margin-top: 30px; color: #7f8c8d; font-size: 0.9em;'>
+            Atentamente,<br>
+            El equipo de VetScan
+        </p>
+    </div>";
+
+            try
+            {
+                await _emailService.SendEmailAsync(model.Email, emailSubject, emailBody);
+                return RedirectToAction(nameof(ResetEmailSent));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending password reset email to {Email}", model.Email);
+                ModelState.AddModelError("", "Ocurrió un error al enviar el correo. Por favor intenta nuevamente.");
+                return View(model);
+            }
+        }
+
+        [HttpGet]
+        public IActionResult ResetEmailSent() => View();
+
+        [HttpGet]
+        public IActionResult ResetPassword(string email, string token)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token)) return RedirectToAction(nameof(RequestPasswordReset));
+
+            return View(new ResetPasswordViewModel { Email = email, Token = token });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Validate token
+            var validToken = await _context.PasswordResetTokens
+                .FirstOrDefaultAsync(t =>
+                    t.Email == model.Email &&
+                    t.Token == model.Token &&
+                    !t.IsUsed &&
+                    t.ExpirationDate > DateTime.UtcNow);
+
+            if (validToken == null)
+            {
+                ModelState.AddModelError("", "Invalid or expired token.");
+                return View(model);
+            }
+
+            // Update password
+            var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.Email == model.Email);
+            if (user != null)
+            {
+                user.Password = model.NewPassword;
+                validToken.IsUsed = true;
+                await _context.SaveChangesAsync();
+            }
+
+            TempData["SuccessMessage"] = "Password updated successfully. Please login with your new password.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        [HttpGet]
+        public IActionResult PasswordResetEmail() => View();
     }
 }

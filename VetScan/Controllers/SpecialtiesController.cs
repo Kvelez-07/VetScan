@@ -222,10 +222,7 @@ namespace VetScan.Controllers
                     .ThenInclude(v => v.User)
                 .FirstOrDefaultAsync(s => s.SpecialtyId == id);
 
-            if (specialty == null)
-            {
-                return NotFound();
-            }
+            if (specialty == null) return NotFound();
 
             // Configuración del PDF
             var memoryStream = new MemoryStream();
@@ -356,10 +353,7 @@ namespace VetScan.Controllers
                     .ThenInclude(v => v.User)
                 .FirstOrDefaultAsync(s => s.SpecialtyId == id);
 
-            if (specialty == null)
-            {
-                return NotFound();
-            }
+            if (specialty == null) return NotFound();
 
             // Configurar la URL para la vista
             var request = HttpContext.Request;
@@ -425,20 +419,14 @@ namespace VetScan.Controllers
         // GET: Specialties/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var specialty = await _context.Specialties
                 .Include(s => s.Veterinarians)
                     .ThenInclude(v => v.User)
                 .FirstOrDefaultAsync(m => m.SpecialtyId == id);
 
-            if (specialty == null)
-            {
-                return NotFound();
-            }
+            if (specialty == null) return NotFound();
 
             var viewModel = new SpecialtyListViewModel
             {
@@ -492,16 +480,10 @@ namespace VetScan.Controllers
         // GET: Specialties/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var specialty = await _context.Specialties.FindAsync(id);
-            if (specialty == null)
-            {
-                return NotFound();
-            }
+            if (specialty == null) return NotFound();
 
             var model = new SpecialtyFormViewModel
             {
@@ -519,20 +501,14 @@ namespace VetScan.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, SpecialtyFormViewModel model)
         {
-            if (id != model.SpecialtyId)
-            {
-                return NotFound();
-            }
+            if (id != model.SpecialtyId) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     var specialty = await _context.Specialties.FindAsync(id);
-                    if (specialty == null)
-                    {
-                        return NotFound();
-                    }
+                    if (specialty == null) return NotFound();
 
                     specialty.SpecialtyName = model.SpecialtyName;
                     specialty.Description = model.Description;
@@ -555,19 +531,13 @@ namespace VetScan.Controllers
         // GET: Specialties/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var specialty = await _context.Specialties
                 .Include(s => s.Veterinarians)
                 .FirstOrDefaultAsync(m => m.SpecialtyId == id);
 
-            if (specialty == null)
-            {
-                return NotFound();
-            }
+            if (specialty == null) return NotFound();
 
             if (specialty.Veterinarians.Any())
             {
@@ -587,10 +557,7 @@ namespace VetScan.Controllers
                 .Include(s => s.Veterinarians)
                 .FirstOrDefaultAsync(s => s.SpecialtyId == id);
 
-            if (specialty == null)
-            {
-                return NotFound();
-            }
+            if (specialty == null) return NotFound();
 
             if (specialty.Veterinarians.Any())
             {

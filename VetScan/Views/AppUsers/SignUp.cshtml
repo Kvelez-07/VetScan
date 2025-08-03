@@ -1,91 +1,201 @@
-﻿@model VetScan.ViewModels.SignUpViewModel
+﻿@using VetScan.ViewModels
+@model SignUpViewModel
 @{
     ViewData["Title"] = "Registro de Usuario";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h2 class="text-center mb-0">@ViewData["Title"]</h2>
+<style>
+    body {
+        background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #ffffff;
+    }
+
+    .signup-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        box-shadow: 0 0 25px rgba(0, 255, 255, 0.1);
+        padding: 2rem;
+        animation: slideUp 0.8s ease-in-out;
+    }
+
+    .signup-header {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #00f0ff;
+        margin-bottom: 1rem;
+        text-shadow: 0 0 8px #00f0ff;
+    }
+
+    .form-control, .form-select {
+        border-radius: 10px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid #777;
+        color: #fff;
+    }
+
+        .form-control::placeholder {
+            color: #ccc;
+        }
+
+    .form-label {
+        font-weight: 600;
+        color: #c4f1ff;
+    }
+
+    .form-select {
+        appearance: none; /* Elimina el estilo del navegador */
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        padding: 0.75rem 1rem;
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid #00f0ff;
+        color: #ffffff;
+        border-radius: 10px;
+        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg width='14' height='10' viewBox='0 0 14 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%2300f0ff' stroke-width='2' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 1rem;
+        font-weight: 500;
+        transition: border 0.3s ease;
+    }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #00f0ff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 240, 255, 0.25);
+        }
+
+        .form-select option {
+            background-color: #1e1e2f;
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+    .btn-primary {
+        background: linear-gradient(90deg, #00f0ff, #007bff);
+        border: none;
+        border-radius: 10px;
+        font-weight: bold;
+        box-shadow: 0 0 12px #00f0ff;
+        transition: all 0.3s ease-in-out;
+    }
+
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #007bff, #00f0ff);
+            box-shadow: 0 0 18px #00f0ff;
+        }
+
+    .logo-container img {
+        max-height: 90px;
+        margin-bottom: 1rem;
+        filter: drop-shadow(0 0 10px #00f0ff);
+        animation: pulse 3s infinite ease-in-out;
+    }
+
+    .text-danger {
+        color: #ff6b6b !important;
+    }
+
+    a {
+        color: #00f0ff;
+    }
+
+        a:hover {
+            color: #00c0e0;
+            text-decoration: underline;
+        }
+
+    .g-recaptcha {
+        transform: scale(0.95);
+        transform-origin: 0 0;
+    }
+</style>
+
+<div class="container d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+    <div class="col-md-8 col-lg-6">
+        <div class="signup-card">
+            <div class="text-center logo-container">
+                <img src="~/img/vetscan_logo.png" alt="VetScan Logo" />
+            </div>
+            <h2 class="text-center signup-header">@ViewData["Title"]</h2>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-                <div class="card-body">
-                    @if (TempData["SuccessMessage"] != null)
-                    {
-                        <div class="alert alert-success alert-dismissible fade show">
-                            @TempData["SuccessMessage"]
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    }
+            }
 
-                    <form asp-action="SignUp" id="signupForm">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <form asp-action="SignUp" id="signupForm">
+                <div asp-validation-summary="ModelOnly" class="text-danger text-center mb-3"></div>
 
-                        <div class="mb-3">
-                            <label asp-for="Username" class="form-label">Nombre de usuario</label>
-                            <input asp-for="Username" class="form-control" placeholder="Ej: juan123" />
-                            <span asp-validation-for="Username" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="Email" class="form-label">Correo electrónico</label>
-                            <input asp-for="Email" class="form-control" placeholder="Ej: juan@example.com" />
-                            <span asp-validation-for="Email" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="Password" class="form-label">Contraseña</label>
-                            <input asp-for="Password" type="password" class="form-control" placeholder="Mínimo 6 caracteres" />
-                            <span asp-validation-for="Password" class="text-danger"></span>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label asp-for="FirstName" class="form-label">Nombre</label>
-                                <input asp-for="FirstName" class="form-control" placeholder="Ej: Juan" />
-                                <span asp-validation-for="FirstName" class="text-danger"></span>
-                            </div>
-                            <div class="col-md-6">
-                                <label asp-for="LastName" class="form-label">Apellido</label>
-                                <input asp-for="LastName" class="form-control" placeholder="Ej: Pérez" />
-                                <span asp-validation-for="LastName" class="text-danger"></span>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="PhoneNumber" class="form-label">Teléfono (opcional)</label>
-                            <input asp-for="PhoneNumber" class="form-control" placeholder="Ej: 1234567890" />
-                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="RoleId" class="form-label">Rol</label>
-                            <select asp-for="RoleId" class="form-select" asp-items="@(new SelectList(ViewBag.Roles, "RoleId", "RoleName"))">
-                                <option value="">-- Seleccione un rol --</option>
-                            </select>
-                            <span asp-validation-for="RoleId" class="text-danger"></span>
-                        </div>
-
-                        <div class="mb-4">
-                            <div class="g-recaptcha"
-                                 data-sitekey="6LcEiZcrAAAAAG8O6RiFcZWrQw8ZEmit9frFjtTG"
-                                 data-callback="onRecaptchaSuccess"
-                                 data-error-callback="onRecaptchaError"
-                                 data-expired-callback="onRecaptchaExpired"></div>
-                            @Html.ValidationMessage("ReCAPTCHA", new { @class = "text-danger" })
-                        </div>
-
-                        <input type="hidden" asp-for="RecaptchaToken" id="recaptchaToken" />
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Registrarse</button>
-                        </div>
-                    </form>
+                <div class="mb-3">
+                    <label asp-for="Username" class="form-label">Nombre de usuario</label>
+                    <input asp-for="Username" class="form-control" placeholder="Ej: juan123" />
+                    <span asp-validation-for="Username" class="text-danger"></span>
                 </div>
-                <div class="card-footer text-center">
-                    <p class="mb-0">¿Ya tienes una cuenta? <a asp-action="Login">Inicia sesión aquí</a></p>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Correo electrónico</label>
+                    <input asp-for="Email" class="form-control" placeholder="Ej: juan@example.com" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
+
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label">Contraseña</label>
+                    <input asp-for="Password" type="password" class="form-control" placeholder="Mínimo 6 caracteres" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="FirstName" class="form-label">Nombre</label>
+                        <input asp-for="FirstName" class="form-control" placeholder="Ej: Juan" />
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="LastName" class="form-label">Apellido</label>
+                        <input asp-for="LastName" class="form-control" placeholder="Ej: Pérez" />
+                        <span asp-validation-for="LastName" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="PhoneNumber" class="form-label">Teléfono (opcional)</label>
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="Ej: 1234567890" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="RoleId" class="form-label">Rol</label>
+                    <select asp-for="RoleId" class="form-select" asp-items="@(new SelectList(ViewBag.Roles, "RoleId", "RoleName"))">
+                        <option value="">-- Seleccione un rol --</option>
+                    </select>
+                    <span asp-validation-for="RoleId" class="text-danger"></span>
+                </div>
+
+                <div class="mb-4">
+                    <div class="g-recaptcha"
+                         data-sitekey="6LcEiZcrAAAAAG8O6RiFcZWrQw8ZEmit9frFjtTG"
+                         data-callback="onRecaptchaSuccess"
+                         data-error-callback="onRecaptchaError"
+                         data-expired-callback="onRecaptchaExpired"></div>
+                    @Html.ValidationMessage("ReCAPTCHA", new { @class = "text-danger" })
+                </div>
+
+                <input type="hidden" asp-for="RecaptchaToken" id="recaptchaToken" />
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">Registrarse</button>
+                </div>
+            </form>
+
+            <div class="text-center mt-4">
+                ¿Ya tienes una cuenta? <a asp-action="Login" class="fw-bold">Inicia sesión aquí</a>
             </div>
         </div>
     </div>
@@ -99,7 +209,6 @@
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
     <script>
-        // reCAPTCHA callbacks
         function onRecaptchaSuccess(token) {
             document.getElementById('recaptchaToken').value = token;
         }
@@ -114,11 +223,9 @@
             grecaptcha.reset();
         }
 
-        // Force challenge in development
-        document.addEventListener('DOMContentLoaded', function() {
-            // Only force challenges in development
+        document.addEventListener('DOMContentLoaded', function () {
             if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-                setTimeout(function() {
+                setTimeout(function () {
                     if (typeof grecaptcha !== 'undefined') {
                         grecaptcha.reset();
                     }

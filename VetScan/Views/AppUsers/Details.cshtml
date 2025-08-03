@@ -1,4 +1,5 @@
-﻿@model VetScan.ViewModels.AppUsersListViewModel
+﻿@using VetScan.ViewModels
+@model AppUsersListViewModel
 @{
     // Verificar si estamos en modo exportación
     var exporting = Context.Request.Query["exporting"].FirstOrDefault() == "true";

@@ -224,10 +224,7 @@ namespace VetScan.Controllers
                 .Include(s => s.Pets.Where(p => p.IsActive))
                 .FirstOrDefaultAsync(s => s.SpeciesId == id);
 
-            if (species == null)
-            {
-                return NotFound();
-            }
+            if (species == null) return NotFound();
 
             // Configuración del PDF
             var memoryStream = new MemoryStream();
@@ -336,10 +333,7 @@ namespace VetScan.Controllers
                 .Include(s => s.Pets)
                 .FirstOrDefaultAsync(s => s.SpeciesId == id);
 
-            if (species == null)
-            {
-                return NotFound();
-            }
+            if (species == null) return NotFound();
 
             // Configurar la URL para la vista
             var request = HttpContext.Request;
@@ -405,20 +399,14 @@ namespace VetScan.Controllers
         // GET: AnimalSpecies/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var species = await _context.AnimalSpecies
                 .Include(s => s.Breeds)
                 .Include(s => s.Pets)
                 .FirstOrDefaultAsync(m => m.SpeciesId == id);
 
-            if (species == null)
-            {
-                return NotFound();
-            }
+            if (species == null) return NotFound();
 
             var viewModel = new AnimalSpeciesListViewModel
             {
@@ -475,10 +463,7 @@ namespace VetScan.Controllers
             }
 
             var species = await _context.AnimalSpecies.FindAsync(id);
-            if (species == null)
-            {
-                return NotFound();
-            }
+            if (species == null) return NotFound();
 
             var model = new AnimalSpeciesFormViewModel
             {
@@ -496,20 +481,14 @@ namespace VetScan.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, AnimalSpeciesFormViewModel model)
         {
-            if (id != model.SpeciesId)
-            {
-                return NotFound();
-            }
+            if (id != model.SpeciesId) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     var species = await _context.AnimalSpecies.FindAsync(id);
-                    if (species == null)
-                    {
-                        return NotFound();
-                    }
+                    if (species == null) return NotFound();
 
                     species.SpeciesName = model.SpeciesName;
                     species.Description = model.Description;
@@ -532,20 +511,14 @@ namespace VetScan.Controllers
         // GET: AnimalSpecies/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var species = await _context.AnimalSpecies
                 .Include(s => s.Breeds)
                 .Include(s => s.Pets)
                 .FirstOrDefaultAsync(m => m.SpeciesId == id);
 
-            if (species == null)
-            {
-                return NotFound();
-            }
+            if (species == null) return NotFound();
 
             return View(species);
         }

@@ -237,10 +237,7 @@ namespace VetScan.Controllers
                 .ThenInclude(po => po.User)
                 .FirstOrDefaultAsync(mr => mr.MedicalRecordId == id);
 
-            if (medicalRecord == null)
-            {
-                return NotFound();
-            }
+            if (medicalRecord == null) return NotFound();
 
             // Configuración del PDF
             var memoryStream = new MemoryStream();
@@ -330,10 +327,7 @@ namespace VetScan.Controllers
                 .ThenInclude(po => po.User)
                 .FirstOrDefaultAsync(mr => mr.MedicalRecordId == id);
 
-            if (medicalRecord == null)
-            {
-                return NotFound();
-            }
+            if (medicalRecord == null) return NotFound();
 
             // Configurar la URL para la vista
             var request = HttpContext.Request;
@@ -401,10 +395,7 @@ namespace VetScan.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var medicalRecord = await _context.MedicalRecords
                 .Include(mr => mr.Pet)
@@ -412,10 +403,7 @@ namespace VetScan.Controllers
                 .ThenInclude(po => po.User)
                 .FirstOrDefaultAsync(mr => mr.MedicalRecordId == id);
 
-            if (medicalRecord == null)
-            {
-                return NotFound();
-            }
+            if (medicalRecord == null) return NotFound();
 
             var viewModel = new MedicalRecordListViewModel
             {
@@ -483,19 +471,13 @@ namespace VetScan.Controllers
         // GET: MedicalRecords/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var medicalRecord = await _context.MedicalRecords
                 .Include(mr => mr.Pet)
                 .FirstOrDefaultAsync(mr => mr.MedicalRecordId == id);
 
-            if (medicalRecord == null)
-            {
-                return NotFound();
-            }
+            if (medicalRecord == null) return NotFound();
 
             await LoadPetsViewData();
 
@@ -517,20 +499,14 @@ namespace VetScan.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, MedicalRecordFormViewModel model)
         {
-            if (id != model.MedicalRecordId)
-            {
-                return NotFound();
-            }
+            if (id != model.MedicalRecordId) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     var medicalRecord = await _context.MedicalRecords.FindAsync(id);
-                    if (medicalRecord == null)
-                    {
-                        return NotFound();
-                    }
+                    if (medicalRecord == null) return NotFound();
 
                     medicalRecord.RecordNumber = model.RecordNumber;
                     medicalRecord.GeneralNotes = model.GeneralNotes;
@@ -555,19 +531,13 @@ namespace VetScan.Controllers
         // GET: MedicalRecords/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var medicalRecord = await _context.MedicalRecords
                 .Include(mr => mr.Pet)
                 .FirstOrDefaultAsync(mr => mr.MedicalRecordId == id);
 
-            if (medicalRecord == null)
-            {
-                return NotFound();
-            }
+            if (medicalRecord == null) return NotFound();
 
             return View(medicalRecord);
         }
@@ -601,9 +571,6 @@ namespace VetScan.Controllers
                 .ToListAsync();
         }
 
-        private string GenerateRecordNumber()
-        {
-            return $"MR-{DateTime.Now:yyyyMMddHHmmss}";
-        }
+        private string GenerateRecordNumber() => $"MR-{DateTime.Now:yyyyMMddHHmmss}";
     }
 }

@@ -1,4 +1,5 @@
-﻿@model VetScan.ViewModels.PetFormViewModel
+﻿@using VetScan.ViewModels
+@model PetFormViewModel
 
 @{
     ViewData["Title"] = "Registro de Mascota";
@@ -20,7 +21,7 @@
                         </div>
                     }
 
-                    <form asp-action="SignUp" method="post">
+                    <form asp-action="Create" method="post">
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                         <div class="mb-3">

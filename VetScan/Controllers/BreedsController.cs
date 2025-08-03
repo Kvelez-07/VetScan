@@ -230,10 +230,7 @@ namespace VetScan.Controllers
                 .Include(b => b.Species)
                 .FirstOrDefaultAsync(b => b.BreedId == id);
 
-            if (breed == null)
-            {
-                return NotFound();
-            }
+            if (breed == null) return NotFound();
 
             // Configuración del PDF
             var memoryStream = new MemoryStream();
@@ -343,10 +340,7 @@ namespace VetScan.Controllers
                 .Include(b => b.Species)
                 .FirstOrDefaultAsync(b => b.BreedId == id);
 
-            if (breed == null)
-            {
-                return NotFound();
-            }
+            if (breed == null) return NotFound();
 
             // Configurar la URL para la vista
             var request = HttpContext.Request;
@@ -412,19 +406,13 @@ namespace VetScan.Controllers
         // GET: Breeds/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var breed = await _context.Breeds
                 .Include(b => b.Species)
                 .FirstOrDefaultAsync(m => m.BreedId == id);
 
-            if (breed == null)
-            {
-                return NotFound();
-            }
+            if (breed == null) return NotFound();
 
             var viewModel = new BreedListViewModel
             {
@@ -481,16 +469,10 @@ namespace VetScan.Controllers
         // GET: Breeds/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var breed = await _context.Breeds.FindAsync(id);
-            if (breed == null)
-            {
-                return NotFound();
-            }
+            if (breed == null) return NotFound();
 
             var model = new BreedFormViewModel
             {
@@ -511,20 +493,14 @@ namespace VetScan.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, BreedFormViewModel model)
         {
-            if (id != model.BreedId)
-            {
-                return NotFound();
-            }
+            if (id != model.BreedId) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     var breed = await _context.Breeds.FindAsync(id);
-                    if (breed == null)
-                    {
-                        return NotFound();
-                    }
+                    if (breed == null) return NotFound();
 
                     breed.SpeciesId = model.SpeciesId;
                     breed.BreedName = model.BreedName;
@@ -550,19 +526,13 @@ namespace VetScan.Controllers
         // GET: Breeds/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var breed = await _context.Breeds
                 .Include(b => b.Species)
                 .FirstOrDefaultAsync(m => m.BreedId == id);
 
-            if (breed == null)
-            {
-                return NotFound();
-            }
+            if (breed == null) return NotFound();
 
             return View(breed);
         }
