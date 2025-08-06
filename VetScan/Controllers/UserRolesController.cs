@@ -479,6 +479,12 @@ namespace VetScan.Controllers
 
             if (role == null) return NotFound();
 
+            if (role.Users.Any())
+            {
+                TempData["ErrorMessage"] = "No se puede desactivar el rol porque tiene usuarios asociados";
+                return RedirectToAction(nameof(Index));
+            }
+
             return View(role);
         }
 
@@ -487,22 +493,34 @@ namespace VetScan.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var role = await _context.UserRoles.FindAsync(id);
-            if (role != null)
+            var role = await _context.UserRoles
+                .Include(r => r.Users)
+                .FirstOrDefaultAsync(r => r.RoleId == id);
+
+            if (role == null)
             {
-                try
-                {
-                    role.IsActive = false; // Soft delete
-                    await _context.SaveChangesAsync();
-                    TempData["SuccessMessage"] = "Rol desactivado exitosamente";
-                }
-                catch (DbUpdateException ex)
-                {
-                    _logger.LogError(ex, "Error al desactivar rol");
-                    TempData["ErrorMessage"] = "No se pudo desactivar el rol porque tiene usuarios asociados.";
-                    return RedirectToAction(nameof(Delete), new { id });
-                }
+                TempData["ErrorMessage"] = "Rol no encontrado";
+                return RedirectToAction(nameof(Index));
             }
+
+            if (role.Users.Any())
+            {
+                TempData["ErrorMessage"] = "No se puede desactivar el rol porque tiene usuarios asociados";
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                role.IsActive = false;
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Rol desactivado exitosamente";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Error al desactivar rol");
+                TempData["ErrorMessage"] = "No se pudo desactivar el rol. Intente nuevamente.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
     }

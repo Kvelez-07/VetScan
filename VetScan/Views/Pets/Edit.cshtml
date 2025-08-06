@@ -1,111 +1,144 @@
 ﻿@using VetScan.ViewModels
 @model PetFormViewModel
-
 @{
     ViewData["Title"] = "Editar Mascota";
 }
 
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h2 class="text-center mb-0">@ViewData["Title"]</h2>
+        <div class="col-lg-8">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-primary text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="h5 mb-0"><i class="bi bi-pencil-square me-2"></i>@ViewData["Title"]</h2>
+                        <a asp-controller="Pets" asp-action="Index" class="btn btn-sm btn-outline-light">
+                            <i class="bi bi-arrow-left me-1"></i> Volver
+                        </a>
+                    </div>
                 </div>
-                <div class="card-body">
+
+                <div class="card-body p-4">
                     @if (TempData["SuccessMessage"] != null)
                     {
-                        <div class="alert alert-success alert-dismissible fade show">
-                            @TempData["SuccessMessage"]
+                        <div class="alert alert-success alert-dismissible fade show shadow-sm mb-4">
+                            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     }
 
-                    <form asp-action="Edit" method="post">
+                    <form asp-action="Edit" class="needs-validation" novalidate method="post">
                         <input type="hidden" asp-for="PetId" />
                         <input type="hidden" asp-for="PetOwnerId" />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4">
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <strong>Por favor corrija los siguientes errores:</strong>
+                        </div>
 
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Dueño actual</label>
-                            <input class="form-control" value="@ViewBag.OwnerName" disabled />
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Dueño actual</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-person text-primary"></i></span>
+                                <input class="form-control" value="@ViewBag.OwnerName" disabled />
+                            </div>
                             <small class="text-muted">No se puede cambiar el dueño de la mascota</small>
                         </div>
 
-                        <div class="row mb-3">
+                        <div class="row mb-4">
                             <div class="col-md-6">
-                                <label asp-for="PetName" class="form-label">Nombre de la mascota</label>
-                                <input asp-for="PetName" class="form-control" />
-                                <span asp-validation-for="PetName" class="text-danger"></span>
+                                <label asp-for="PetName" class="form-label fw-semibold">Nombre de la mascota</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-heart text-primary"></i></span>
+                                    <input asp-for="PetName" class="form-control" required />
+                                </div>
+                                <span asp-validation-for="PetName" class="text-danger small"></span>
                             </div>
                             <div class="col-md-6">
-                                <label asp-for="PetCode" class="form-label">Código de mascota</label>
-                                <input asp-for="PetCode" class="form-control" />
-                                <span asp-validation-for="PetCode" class="text-danger"></span>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label asp-for="SpeciesId" class="form-label">Especie</label>
-                                <select asp-for="SpeciesId" class="form-select" required
-                                        onchange="loadBreeds(this.value)">
-                                    <option value="">-- Seleccione una especie --</option>
-                                    @foreach (var species in ViewBag.Species)
-                                    {
-                                        <option value="@species.SpeciesId">@species.SpeciesName</option>
-                                    }
-                                </select>
-                                <span asp-validation-for="SpeciesId" class="text-danger"></span>
-                            </div>
-                            <div class="col-md-6">
-                                <label asp-for="BreedId" class="form-label">Raza (opcional)</label>
-                                <select asp-for="BreedId" class="form-select" id="breedSelect">
-                                    <option value="">-- Seleccione una raza --</option>
-                                    @foreach (var breed in ViewBag.Breeds)
-                                    {
-                                        <option value="@breed.BreedId" data-species="@breed.SpeciesId">@breed.BreedName</option>
-                                    }
-                                </select>
-                                <span asp-validation-for="BreedId" class="text-danger"></span>
+                                <label asp-for="PetCode" class="form-label fw-semibold">Código de mascota</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-tag text-primary"></i></span>
+                                    <input asp-for="PetCode" class="form-control" />
+                                </div>
+                                <span asp-validation-for="PetCode" class="text-danger small"></span>
                             </div>
                         </div>
 
-                        <div class="row mb-3">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="SpeciesId" class="form-label fw-semibold">Especie</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-bug text-primary"></i></span>
+                                    <select asp-for="SpeciesId" class="form-select" required onchange="loadBreeds(this.value)">
+                                        <option value="">-- Seleccione una especie --</option>
+                                        @foreach (var species in ViewBag.Species)
+                                        {
+                                            <option value="@species.SpeciesId">@species.SpeciesName</option>
+                                        }
+                                    </select>
+                                </div>
+                                <span asp-validation-for="SpeciesId" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="BreedId" class="form-label fw-semibold">Raza</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-bug text-primary"></i></span>
+                                    <select asp-for="BreedId" class="form-select" id="breedSelect">
+                                        <option value="">-- Seleccione una raza --</option>
+                                        @foreach (var breed in ViewBag.Breeds)
+                                        {
+                                            <option value="@breed.BreedId" data-species="@breed.SpeciesId">@breed.BreedName</option>
+                                        }
+                                    </select>
+                                </div>
+                                <span asp-validation-for="BreedId" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
                             <div class="col-md-4">
-                                <label asp-for="Gender" class="form-label">Género</label>
-                                <select asp-for="Gender" class="form-select">
-                                    <option value="">-- No especificado --</option>
-                                    <option value="M">Macho</option>
-                                    <option value="F">Hembra</option>
-                                </select>
-                                <span asp-validation-for="Gender" class="text-danger"></span>
+                                <label asp-for="Gender" class="form-label fw-semibold">Género</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-gender-ambiguous text-primary"></i></span>
+                                    <select asp-for="Gender" class="form-select">
+                                        <option value="">-- No especificado --</option>
+                                        <option value="M">Macho</option>
+                                        <option value="F">Hembra</option>
+                                    </select>
+                                </div>
+                                <span asp-validation-for="Gender" class="text-danger small"></span>
                             </div>
                             <div class="col-md-4">
-                                <label asp-for="DateOfBirth" class="form-label">Fecha de nacimiento</label>
-                                <input asp-for="DateOfBirth" type="date" class="form-control" />
-                                <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                                <label asp-for="DateOfBirth" class="form-label fw-semibold">Fecha de nacimiento</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-calendar text-primary"></i></span>
+                                    <input asp-for="DateOfBirth" type="date" class="form-control" />
+                                </div>
+                                <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
                             </div>
                             <div class="col-md-4">
-                                <label asp-for="Weight" class="form-label">Peso (kg)</label>
-                                <input asp-for="Weight" type="number" step="0.1" class="form-control" />
-                                <span asp-validation-for="Weight" class="text-danger"></span>
+                                <label asp-for="Weight" class="form-label fw-semibold">Peso (kg)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-speedometer2 text-primary"></i></span>
+                                    <input asp-for="Weight" type="number" step="0.1" class="form-control" />
+                                </div>
+                                <span asp-validation-for="Weight" class="text-danger small"></span>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label asp-for="Color" class="form-label">Color</label>
-                            <input asp-for="Color" class="form-control" />
-                            <span asp-validation-for="Color" class="text-danger"></span>
+                        <div class="mb-4">
+                            <label asp-for="Color" class="form-label fw-semibold">Color</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-palette text-primary"></i></span>
+                                <input asp-for="Color" class="form-control" />
+                            </div>
+                            <span asp-validation-for="Color" class="text-danger small"></span>
                         </div>
 
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a asp-action="Index" class="btn btn-secondary me-md-2">
-                                <i class="bi bi-arrow-left"></i> Volver
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <a asp-controller="Pets" asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i> Cancelar
                             </a>
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save"></i> Guardar Cambios
+                                <i class="bi bi-save me-1"></i> Guardar Cambios
                             </button>
                         </div>
                     </form>
@@ -114,6 +147,21 @@
         </div>
     </div>
 </div>
+
+<style>
+    .form-control, .form-select, .input-group-text {
+        border-radius: 0.375rem;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        }
+
+    .card {
+        border-radius: 0.5rem;
+    }
+</style>
 
 @section Scripts {
     @{

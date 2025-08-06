@@ -6,70 +6,80 @@
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>@ViewData["Title"]</h1>
+        <h1 class="fw-bold text-primary">@ViewData["Title"]</h1>
         <div>
-            <!-- Botón de Exportación con Dropdown -->
+            <!-- Export Dropdown -->
             <div class="btn-group me-2">
                 <button type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-download"></i> Exportar
+                    <i class="bi bi-download me-1"></i> Exportar
                 </button>
-                <ul class="dropdown-menu">
+                <ul class="dropdown-menu dropdown-menu-end shadow">
                     <li>
                         <a class="dropdown-item" asp-action="ExportToPdf" asp-route-searchString="@ViewData["CurrentFilter"]">
-                            <i class="bi bi-file-earmark-pdf text-danger"></i> PDF
+                            <i class="bi bi-file-earmark-pdf text-danger me-2"></i> PDF
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item" asp-action="ExportToExcel" asp-route-searchString="@ViewData["CurrentFilter"]">
-                            <i class="bi bi-file-earmark-excel text-success"></i> Excel
+                            <i class="bi bi-file-earmark-excel text-success me-2"></i> Excel
                         </a>
                     </li>
                 </ul>
             </div>
 
             <a asp-controller="Pets" asp-action="Create" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> Nueva Mascota
+                <i class="bi bi-plus-circle me-1"></i> Nueva Mascota
             </a>
         </div>
     </div>
 
-    <!-- Resto del código de la vista Index permanece igual -->
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show">
-            @TempData["SuccessMessage"]
+        <div class="alert alert-success alert-dismissible fade show shadow-sm">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
-    <div class="card mb-3">
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card mb-4 border-0 shadow-sm">
         <div class="card-body">
-            <form asp-action="Index" method="get" class="row g-2">
+            <form asp-action="Index" method="get" class="row g-3">
                 <div class="col-md-8">
-                    <input type="text" class="form-control" name="searchString"
-                           value="@ViewData["CurrentFilter"]" placeholder="Buscar por nombre o código...">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-search text-secondary"></i></span>
+                        <input type="text" class="form-control" name="searchString"
+                               value="@ViewData["CurrentFilter"]" placeholder="Buscar por nombre o código...">
+                    </div>
                 </div>
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-search"></i> Buscar
+                        <i class="bi bi-search me-1"></i> Buscar
                     </button>
                 </div>
                 <div class="col-md-2">
                     <a asp-action="Index" class="btn btn-outline-secondary w-100">
-                        <i class="bi bi-x-circle"></i> Limpiar
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Limpiar
                     </a>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="card shadow">
-        <div class="card-body">
+    <div class="card border-0 shadow">
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="table-dark">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
                         <tr>
-                            <th>Código</th>
+                            <th class="ps-4">Código</th>
                             <th>Nombre</th>
                             <th>Especie</th>
                             <th>Raza</th>
@@ -77,7 +87,7 @@
                             <th>Fecha Nac.</th>
                             <th>Edad</th>
                             <th>Género</th>
-                            <th class="text-end">Acciones</th>
+                            <th class="text-end pe-4">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -85,8 +95,8 @@
                         {
                             @foreach (var item in Model)
                             {
-                                <tr>
-                                    <td>@item.PetCode</td>
+                                <tr class="hover-shadow">
+                                    <td class="ps-4 fw-semibold">@item.PetCode</td>
                                     <td>@item.PetName</td>
                                     <td>@item.Species</td>
                                     <td>@(item.Breed ?? "N/A")</td>
@@ -96,24 +106,23 @@
                                         <span class="badge bg-light text-dark">@item.AgeDisplay</span>
                                     </td>
                                     <td>@(item.GenderDisplay ?? "N/A")</td>
-                                    <td class="text-end">
-                                        <div class="d-flex gap-1 justify-content-end">
+                                    <td class="text-end pe-4">
+                                        <div class="d-flex gap-2 justify-content-end">
                                             <a asp-action="Details" asp-route-id="@item.PetId"
-                                               class="btn btn-sm btn-outline-primary" title="Detalles">
+                                               class="btn btn-sm btn-outline-primary rounded-circle action-btn"
+                                               data-bs-toggle="tooltip" data-bs-title="Detalles">
                                                 <i class="bi bi-eye"></i>
                                             </a>
                                             <a asp-action="Edit" asp-route-id="@item.PetId"
-                                               class="btn btn-sm btn-outline-warning" title="Editar">
+                                               class="btn btn-sm btn-outline-warning rounded-circle action-btn"
+                                               data-bs-toggle="tooltip" data-bs-title="Editar">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <form asp-action="Delete" method="post" class="d-inline">
-                                                <input type="hidden" name="id" value="@item.PetId" />
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                        title="Eliminar"
-                                                        onclick="return confirm('¿Eliminar esta mascota?')">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
+                                            <a asp-action="Delete" asp-route-id="@item.PetId"
+                                               class="btn btn-sm btn-outline-danger rounded-circle action-btn"
+                                               data-bs-toggle="tooltip" data-bs-title="Eliminar">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>
@@ -122,7 +131,10 @@
                         else
                         {
                             <tr>
-                                <td colspan="9" class="text-center">No se encontraron mascotas.</td>
+                                <td colspan="9" class="text-center py-4 text-muted">
+                                    <i class="bi bi-heart fs-4"></i>
+                                    <div class="mt-2">No se encontraron mascotas</div>
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -133,27 +145,30 @@
 </div>
 
 <style>
-    /* Estilos para el dropdown de exportación */
-    .btn-group .dropdown-menu {
-        min-width: 12rem;
-    }
-
-    .dropdown-item {
+    .action-btn {
+        width: 32px;
+        height: 32px;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
+        justify-content: center;
     }
 
-        .dropdown-item i {
-            font-size: 1.1rem;
-        }
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+        transition: all 0.2s ease;
+    }
 
-        .dropdown-item:hover {
-            background-color: #f8f9fa;
-        }
-
-        .dropdown-item:active {
-            background-color: #e9ecef;
-        }
+    .hover-shadow:hover {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
 </style>
+
+@section Scripts {
+    <script>
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
+}

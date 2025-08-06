@@ -3,48 +3,95 @@
     ViewData["Title"] = "Eliminar Vacunación";
 }
 
-<div class="container mt-4">
-    <div class="card shadow">
-        <div class="card-header bg-danger text-white">
-            <h2 class="mb-0">@ViewData["Title"]</h2>
-        </div>
-        <div class="card-body">
-            <h3>¿Está seguro que desea eliminar este registro?</h3>
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <dl class="row">
-                        <dt class="col-sm-4">Mascota:</dt>
-                        <dd class="col-sm-8">@Model.Pet.PetName</dd>
-
-                        <dt class="col-sm-4">Vacuna:</dt>
-                        <dd class="col-sm-8">@Model.Vaccine.VaccineName</dd>
-
-                        <dt class="col-sm-4">Veterinario:</dt>
-                        <dd class="col-sm-8">@Model.Veterinarian.User.FirstName</dd>
-                    </dl>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-danger text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="h5 mb-0"><i class="bi bi-exclamation-triangle me-2"></i>@ViewData["Title"]</h2>
+                        <a asp-action="Index" class="btn btn-sm btn-outline-light">
+                            <i class="bi bi-arrow-left me-1"></i> Volver
+                        </a>
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <dl class="row">
-                        <dt class="col-sm-4">Fecha:</dt>
-                        <dd class="col-sm-8">@Model.VaccinationDate.ToString("dd/MM/yyyy")</dd>
 
-                        <dt class="col-sm-4">Lote:</dt>
-                        <dd class="col-sm-8">@(Model.BatchNumber ?? "N/A")</dd>
+                <div class="card-body p-4">
+                    <div class="alert alert-danger d-flex align-items-center mb-4">
+                        <i class="bi bi-exclamation-octagon-fill fs-4 me-3"></i>
+                        <div>
+                            <h5 class="alert-heading mb-2">¡Advertencia importante!</h5>
+                            <p class="mb-0">Esta acción eliminará permanentemente este registro de vacunación y no se puede deshacer.</p>
+                        </div>
+                    </div>
 
-                        <dt class="col-sm-4">Próxima dosis:</dt>
-                        <dd class="col-sm-8">@(Model.NextDueDate?.ToString("dd/MM/yyyy") ?? "N/A")</dd>
-                    </dl>
+                    <h5 class="fw-semibold text-primary border-bottom pb-2 mb-3">Detalles de la Vacunación</h5>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Mascota:</dt>
+                                <dd class="col-sm-8 fw-semibold">@Model.Pet.PetName</dd>
+
+                                <dt class="col-sm-4">Vacuna:</dt>
+                                <dd class="col-sm-8">@Model.Vaccine.VaccineName</dd>
+
+                                <dt class="col-sm-4">Veterinario:</dt>
+                                <dd class="col-sm-8">@Model.Veterinarian.User.FirstName</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Fecha:</dt>
+                                <dd class="col-sm-8">@Model.VaccinationDate.ToString("dd/MM/yyyy")</dd>
+
+                                <dt class="col-sm-4">Lote:</dt>
+                                <dd class="col-sm-8">@(Model.BatchNumber ?? "N/A")</dd>
+
+                                <dt class="col-sm-4">Próxima dosis:</dt>
+                                <dd class="col-sm-8">@(Model.NextDueDate?.ToString("dd/MM/yyyy") ?? "N/A")</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning mt-4">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Confirmación requerida:</strong> ¿Estás seguro que deseas eliminar este registro de vacunación?
+                    </div>
+                </div>
+
+                <div class="card-footer bg-light">
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="VaccinationId" />
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-1"></i> Eliminar
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-        <div class="card-footer">
-            <form asp-action="Delete" method="post">
-                <input type="hidden" asp-for="VaccinationId" />
-                <div class="d-flex justify-content-end gap-2">
-                    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
-                    <button type="submit" class="btn btn-danger">Eliminar</button>
-                </div>
-            </form>
-        </div>
     </div>
 </div>
+
+<style>
+    .card {
+        border-radius: 0.5rem;
+    }
+
+    .alert-danger {
+        border-left: 4px solid #dc3545;
+    }
+
+    .alert-warning {
+        border-left: 4px solid #ffc107;
+    }
+
+    dt {
+        color: #6c757d;
+    }
+</style>

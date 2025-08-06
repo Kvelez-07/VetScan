@@ -1,7 +1,6 @@
-﻿@using VetScan.ViewModels
-@model AppUsersListViewModel
+﻿@model VetScan.Models.Vaccine
 @{
-    ViewData["Title"] = "Eliminar Usuario";
+    ViewData["Title"] = "Desactivar Vacuna";
 }
 
 <div class="container mt-5">
@@ -22,47 +21,48 @@
                         <i class="bi bi-exclamation-octagon-fill fs-4 me-3"></i>
                         <div>
                             <h5 class="alert-heading mb-2">¡Advertencia importante!</h5>
-                            <p class="mb-0">Esta acción eliminará permanentemente este usuario y no se puede deshacer.</p>
+                            <p class="mb-0">Esta acción desactivará permanentemente esta vacuna y no podrá ser asignada a nuevas mascotas. Los registros existentes no serán afectados.</p>
                         </div>
                     </div>
 
-                    <h5 class="fw-semibold text-primary border-bottom pb-2 mb-3">Detalles del Usuario</h5>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <dl class="row">
-                                <dt class="col-sm-4">Usuario:</dt>
-                                <dd class="col-sm-8 fw-semibold">@Model.Username</dd>
+                    <h5 class="fw-semibold text-primary border-bottom pb-2 mb-3">Detalles de la Vacuna</h5>
 
-                                <dt class="col-sm-4">Nombre:</dt>
-                                <dd class="col-sm-8">@Model.FullName</dd>
-                            </dl>
-                        </div>
-                        <div class="col-md-6">
-                            <dl class="row">
-                                <dt class="col-sm-4">Rol:</dt>
-                                <dd class="col-sm-8">@Model.RoleName</dd>
+                    <dl class="row">
+                        <dt class="col-sm-3">Nombre:</dt>
+                        <dd class="col-sm-9 fw-semibold">@Model.VaccineName</dd>
 
-                                <dt class="col-sm-4">Correo:</dt>
-                                <dd class="col-sm-8">@Model.Email</dd>
-                            </dl>
-                        </div>
-                    </div>
+                        <dt class="col-sm-3">Fabricante:</dt>
+                        <dd class="col-sm-9">@(Model.Manufacturer ?? "N/A")</dd>
+
+                        <dt class="col-sm-3">Tipo:</dt>
+                        <dd class="col-sm-9">@(Model.VaccineType ?? "N/A")</dd>
+
+                        <dt class="col-sm-3">Especie:</dt>
+                        <dd class="col-sm-9">@(Model.Species?.SpeciesName ?? "Todas")</dd>
+
+                        <dt class="col-sm-3">Tipo de vacuna:</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge @(Model.IsCore ? "bg-primary" : "bg-secondary")">
+                                @(Model.IsCore ? "Básica" : "Opcional")
+                            </span>
+                        </dd>
+                    </dl>
 
                     <div class="alert alert-warning mt-4">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <strong>Confirmación requerida:</strong> ¿Estás seguro que deseas eliminar este usuario?
+                        <strong>Confirmación requerida:</strong> ¿Estás seguro que deseas desactivar esta vacuna?
                     </div>
                 </div>
 
                 <div class="card-footer bg-light">
-                    <form asp-action="Delete">
-                        <input type="hidden" asp-for="UserId" />
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="VaccineId" />
                         <div class="d-flex justify-content-between">
                             <a asp-action="Index" class="btn btn-outline-secondary">
                                 <i class="bi bi-x-circle me-1"></i> Cancelar
                             </a>
                             <button type="submit" class="btn btn-danger">
-                                <i class="bi bi-trash me-1"></i> Sí, Eliminar
+                                <i class="bi bi-trash me-1"></i> Desactivar
                             </button>
                         </div>
                     </form>
@@ -87,5 +87,13 @@
 
     dt {
         color: #6c757d;
+    }
+
+    .badge.bg-primary {
+        background-color: #0d6efd !important;
+    }
+
+    .badge.bg-secondary {
+        background-color: #6c757d !important;
     }
 </style>

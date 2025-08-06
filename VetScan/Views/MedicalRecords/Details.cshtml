@@ -6,55 +6,54 @@
 
     if (exporting)
     {
-        Layout = null; // Eliminar layout para exportación
-                       <style>
-                           body {
-                               padding: 20px;
-                               background-color: white !important;
-                           }
-                           /* Ocultar elementos no deseados en la exportación */
-                           .no-export {
-                               display: none !important;
-                           }
-                       </style>
+        Layout = null;
+        <style>
+            body {
+                padding: 20px;
+                background-color: white !important;
+            }
+
+            .no-export {
+                display: none !important;
+            }
+        </style>
     }
 }
 
 <div class="container mt-4">
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white">
+    <div class="card border-0 shadow">
+        <div class="card-header bg-primary text-white py-3">
             <div class="d-flex justify-content-between align-items-center @(exporting ? "no-export" : "")">
-                <h2 class="mb-0">Registro: @Model.RecordNumber</h2>
+                <h2 class="h5 mb-0"><i class="bi bi-file-medical me-2"></i>Registro: @Model.RecordNumber</h2>
                 <div>
-                    <!-- Botón de Exportación con Dropdown -->
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-download"></i> Exportar
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-download me-1"></i> Exportar
                         </button>
-                        <ul class="dropdown-menu">
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
                             <li>
                                 <a class="dropdown-item" asp-action="ExportDetailsToPdf" asp-route-id="@Model.MedicalRecordId">
-                                    <i class="bi bi-file-earmark-pdf text-danger"></i> PDF
+                                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i> PDF
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" asp-action="ExportDetailsToImage" asp-route-id="@Model.MedicalRecordId" asp-route-format="png">
-                                    <i class="bi bi-file-image text-success"></i> PNG
+                                    <i class="bi bi-file-image text-success me-2"></i> PNG
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" asp-action="ExportDetailsToImage" asp-route-id="@Model.MedicalRecordId" asp-route-format="jpg">
-                                    <i class="bi bi-file-image text-info"></i> JPG
+                                    <i class="bi bi-file-image text-info me-2"></i> JPG
                                 </a>
                             </li>
                         </ul>
                     </div>
 
-                    <a asp-action="Edit" asp-route-id="@Model.MedicalRecordId" class="btn btn-warning ms-2">
-                        <i class="bi bi-pencil"></i> Editar
+                    <a asp-action="Edit" asp-route-id="@Model.MedicalRecordId" class="btn btn-sm btn-warning">
+                        <i class="bi bi-pencil me-1"></i> Editar
                     </a>
-                    <a asp-action="Index" class="btn btn-secondary ms-2">
-                        <i class="bi bi-arrow-left"></i> Volver
+                    <a asp-action="Index" class="btn btn-sm btn-outline-light ms-2">
+                        <i class="bi bi-arrow-left me-1"></i> Volver
                     </a>
                 </div>
             </div>
@@ -65,7 +64,7 @@
                 <div class="col-md-6">
                     <dl class="row">
                         <dt class="col-sm-4">Número:</dt>
-                        <dd class="col-sm-8">@Model.RecordNumber</dd>
+                        <dd class="col-sm-8 fw-semibold">@Model.RecordNumber</dd>
 
                         <dt class="col-sm-4">Fecha:</dt>
                         <dd class="col-sm-8">@Model.FormattedCreationDate</dd>
@@ -76,12 +75,11 @@
                         </dd>
                     </dl>
                 </div>
-
                 <div class="col-md-6">
                     <dl class="row">
                         <dt class="col-sm-4">Mascota:</dt>
-                        <dd class="col-sm-8">
-                            <a asp-controller="Pets" asp-action="Details" asp-route-id="@Model.PetId">
+                        <dd class="col-sm-8 fw-semibold">
+                            <a asp-controller="Pets" asp-action="Details" asp-route-id="@Model.PetId" class="text-decoration-none">
                                 @Model.PetName (@ViewBag.PetCode)
                             </a>
                         </dd>
@@ -93,8 +91,8 @@
             </div>
 
             <div class="mb-4">
-                <h4>Notas Generales</h4>
-                <div class="card">
+                <h5 class="fw-semibold border-bottom pb-2 mb-3">Notas Generales</h5>
+                <div class="card border-0 shadow-sm">
                     <div class="card-body">
                         @if (!string.IsNullOrEmpty(ViewBag.GeneralNotes))
                         {
@@ -108,31 +106,32 @@
                 </div>
             </div>
 
-            <div class="mt-4">
-                <h4>Consultas Relacionadas</h4>
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i>
-                    Vista previa de consultas médicas asociadas a este registro.
-                    <a asp-controller="MedicalConsultations" asp-action="Details" asp-route-id="@Model.MedicalRecordId" class="btn btn-link">
-                        Ver todas las consultas
-                    </a>
+            @if (!exporting)
+            {
+                <div class="mt-4">
+                    <h5 class="fw-semibold border-bottom pb-2 mb-3">Consultas Relacionadas</h5>
+                    <div class="alert alert-info d-flex align-items-center">
+                        <i class="bi bi-info-circle fs-4 me-3"></i>
+                        <div>
+                            <h6 class="alert-heading mb-1">Vista previa de consultas</h6>
+                            <p class="mb-0">Consultas médicas asociadas a este registro.</p>
+                            <a asp-controller="MedicalConsultations" asp-action="Index" asp-route-recordId="@Model.MedicalRecordId" class="btn btn-link p-0">
+                                Ver todas las consultas <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            }
         </div>
 
-        <div class="card-footer">
-            <div class="d-flex justify-content-between">
+        <div class="card-footer bg-light">
+            <div class="d-flex justify-content-between align-items-center">
                 <small class="text-muted">
-                    ID: @Model.MedicalRecordId | Creado: @Model.FormattedCreationDate
+                    <i class="bi bi-info-circle me-1"></i> ID: @Model.MedicalRecordId | Creado: @Model.FormattedCreationDate
                 </small>
-                <div>
-@*                     <a asp-action="Edit" asp-route-id="@Model.MedicalRecordId" class="btn btn-warning">
-                        <i class="bi bi-pencil"></i> Editar
-                    </a> *@
-                    <a asp-action="Index" class="btn btn-outline-secondary">
-                        <i class="bi bi-list"></i> Volver al listado
-                    </a>
-                </div>
+                <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-list me-1"></i> Volver al listado
+                </a>
             </div>
         </div>
     </div>
@@ -142,39 +141,35 @@
     .status-active {
         color: #fff;
         background-color: #28a745;
-        padding: 3px 8px;
-        border-radius: 4px;
-        font-size: 0.875em;
+        padding: 4px 10px;
+        border-radius: 50px;
+        font-size: 0.8em;
+        font-weight: 500;
     }
 
     .status-inactive {
         color: #fff;
         background-color: #6c757d;
-        padding: 3px 8px;
-        border-radius: 4px;
-        font-size: 0.875em;
+        padding: 4px 10px;
+        border-radius: 50px;
+        font-size: 0.8em;
+        font-weight: 500;
     }
 
-    .btn-group .dropdown-menu {
-        min-width: 10rem;
+    .status-archived {
+        color: #fff;
+        background-color: #6f42c1;
+        padding: 4px 10px;
+        border-radius: 50px;
+        font-size: 0.8em;
+        font-weight: 500;
     }
 
-    .dropdown-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
+    .card {
+        border-radius: 0.5rem;
     }
 
-        .dropdown-item i {
-            font-size: 1.1rem;
-        }
-
-        .dropdown-item:hover {
-            background-color: #f8f9fa;
-        }
-
-        .dropdown-item:active {
-            background-color: #e9ecef;
-        }
+    dt {
+        color: #6c757d;
+    }
 </style>

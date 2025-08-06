@@ -4,53 +4,114 @@
 }
 
 <div class="container mt-4">
-    <div class="card shadow">
-        <div class="card-header bg-danger text-white">
-            <h2 class="mb-0">@ViewData["Title"]</h2>
+    <div class="card border-0 shadow">
+        <div class="card-header bg-danger text-white py-3">
+            <h2 class="h5 mb-0"><i class="bi bi-exclamation-triangle me-2"></i>@ViewData["Title"]</h2>
         </div>
+
         <div class="card-body">
-            <h3>¿Estás seguro que deseas desactivar esta especie?</h3>
-
-            <div class="alert alert-warning mt-4">
-                <strong>¡Advertencia!</strong>
-                @if (Model.Breeds.Any(b => b.IsActive) || Model.Pets.Any(p => p.IsActive))
-                {
-                    <span>Esta especie tiene @Model.Breeds.Count(b => b.IsActive) razas y @Model.Pets.Count(p => p.IsActive) mascotas asociadas. No podrás desactivarla si tiene razas o mascotas activas.</span>
-                }
-                else
-                {
-                    <span>Esta acción no eliminará la especie permanentemente, solo la marcará como inactiva.</span>
-                }
+            <div class="alert alert-danger d-flex align-items-center mb-4">
+                <i class="bi bi-exclamation-octagon-fill fs-4 me-3"></i>
+                <div>
+                    <h5 class="alert-heading mb-2">¡Advertencia importante!</h5>
+                    <p class="mb-0">
+                        @if (Model.Breeds.Any(b => b.IsActive) || Model.Pets.Any(p => p.IsActive))
+                        {
+                            <span>Esta especie tiene @Model.Breeds.Count(b => b.IsActive) razas y @Model.Pets.Count(p => p.IsActive) mascotas asociadas activas. No podrás desactivarla si tiene razas o mascotas activas.</span>
+                        }
+                        else
+                        {
+                            <span>Esta acción no eliminará la especie permanentemente, solo la marcará como inactiva.</span>
+                        }
+                    </p>
+                </div>
             </div>
 
-            <div class="mt-4">
-                <h4>Detalles de la Especie</h4>
-                <dl class="row">
-                    <dt class="col-sm-3">Nombre:</dt>
-                    <dd class="col-sm-9">@Model.SpeciesName</dd>
+            <div class="mb-4">
+                <h5 class="fw-semibold text-primary border-bottom pb-2 mb-3">Detalles de la Especie</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-5">Nombre:</dt>
+                            <dd class="col-sm-7">@Model.SpeciesName</dd>
 
-                    <dt class="col-sm-3">Descripción:</dt>
-                    <dd class="col-sm-9">@(Model.Description ?? "No disponible")</dd>
+                            <dt class="col-sm-5">Descripción:</dt>
+                            <dd class="col-sm-7">@(string.IsNullOrEmpty(Model.Description) ? "No disponible" : Model.Description)</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-5">Razas activas:</dt>
+                            <dd class="col-sm-7">
+                                <span class="badge bg-@(Model.Breeds.Any(b => b.IsActive) ? "danger" : "success") rounded-pill">
+                                    @Model.Breeds.Count(b => b.IsActive)
+                                </span>
+                            </dd>
 
-                    <dt class="col-sm-3">Razas activas:</dt>
-                    <dd class="col-sm-9">@Model.Breeds.Count(b => b.IsActive)</dd>
-
-                    <dt class="col-sm-3">Mascotas activas:</dt>
-                    <dd class="col-sm-9">@Model.Pets.Count(p => p.IsActive)</dd>
-                </dl>
+                            <dt class="col-sm-5">Mascotas activas:</dt>
+                            <dd class="col-sm-7">
+                                <span class="badge bg-@(Model.Pets.Any(p => p.IsActive) ? "danger" : "success") rounded-pill">
+                                    @Model.Pets.Count(p => p.IsActive)
+                                </span>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
             </div>
+
+            @if (!Model.Breeds.Any(b => b.IsActive) && !Model.Pets.Any(p => p.IsActive))
+            {
+                <div class="alert alert-warning mt-4">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Confirmación requerida:</strong> ¿Estás seguro que deseas desactivar esta especie?
+                </div>
+            }
         </div>
-        <div class="card-footer">
+
+        <div class="card-footer bg-light">
             <form asp-action="Delete">
                 <input type="hidden" asp-for="SpeciesId" />
-                <div class="d-flex justify-content-end gap-2">
-                    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Cancelar
+                    </a>
                     @if (!Model.Breeds.Any(b => b.IsActive) && !Model.Pets.Any(p => p.IsActive))
                     {
-                        <button type="submit" class="btn btn-danger">Desactivar</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i> Sí, Desactivar
+                        </button>
+                    }
+                    else
+                    {
+                        <a asp-action="Index" class="btn btn-primary">
+                            <i class="bi bi-arrow-left me-1"></i> Entendido
+                        </a>
                     }
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<style>
+    .card {
+        border-radius: 0.5rem;
+    }
+
+    dt {
+        font-weight: 500;
+        color: #6c757d;
+    }
+
+    dd {
+        margin-bottom: 0.75rem;
+    }
+
+    .alert-danger {
+        border-left: 4px solid #dc3545;
+    }
+
+    .alert-warning {
+        border-left: 4px solid #ffc107;
+    }
+</style>

@@ -1,6 +1,6 @@
-﻿@model VetScan.Models.VitalSign
+﻿@model VetScan.Models.MedicalRecord
 @{
-    ViewData["Title"] = "Eliminar Registro de Signos Vitales";
+    ViewData["Title"] = "Eliminar Registro Médico";
 }
 
 <div class="container mt-5">
@@ -21,52 +21,39 @@
                         <i class="bi bi-exclamation-octagon-fill fs-4 me-3"></i>
                         <div>
                             <h5 class="alert-heading mb-2">¡Advertencia importante!</h5>
-                            <p class="mb-0">Esta acción eliminará permanentemente este registro de signos vitales y no se puede deshacer.</p>
+                            <p class="mb-0">Esta acción eliminará permanentemente este registro médico y no se puede deshacer.</p>
                         </div>
                     </div>
 
                     <h5 class="fw-semibold text-primary border-bottom pb-2 mb-3">Detalles del Registro</h5>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <dl class="row">
-                                <dt class="col-sm-4">Fecha:</dt>
-                                <dd class="col-sm-8 fw-semibold">@Model.RecordedDate.ToString("dd/MM/yyyy HH:mm")</dd>
+                    <dl class="row">
+                        <dt class="col-sm-4">Número de Registro:</dt>
+                        <dd class="col-sm-8 fw-semibold">@Model.RecordNumber</dd>
 
-                                <dt class="col-sm-4">Temperatura:</dt>
-                                <dd class="col-sm-8">@(Model.Temperature?.ToString() ?? "N/A") °C</dd>
+                        <dt class="col-sm-4">Mascota:</dt>
+                        <dd class="col-sm-8">@Model.Pet.PetName</dd>
 
-                                <dt class="col-sm-4">Frec. Cardíaca:</dt>
-                                <dd class="col-sm-8">@(Model.HeartRate?.ToString() ?? "N/A") lpm</dd>
-                            </dl>
-                        </div>
+                        <dt class="col-sm-4">Fecha de Creación:</dt>
+                        <dd class="col-sm-8">@Model.CreationDate.ToString("dd/MM/yyyy HH:mm")</dd>
 
-                        <div class="col-md-6">
-                            <dl class="row">
-                                <dt class="col-sm-4">Frec. Respiratoria:</dt>
-                                <dd class="col-sm-8">@(Model.RespiratoryRate?.ToString() ?? "N/A") rpm</dd>
-
-                                <dt class="col-sm-4">Peso:</dt>
-                                <dd class="col-sm-8">@(Model.Weight?.ToString() ?? "N/A") kg</dd>
-
-                                <dt class="col-sm-4">Presión:</dt>
-                                <dd class="col-sm-8">
-                                    @(Model.BloodPressureSystolic.HasValue && Model.BloodPressureDiastolic.HasValue ?
-                                                                        $"{Model.BloodPressureSystolic}/{Model.BloodPressureDiastolic}" : "N/A")
-                                </dd>
-                            </dl>
-                        </div>
-                    </div>
+                        <dt class="col-sm-4">Estado:</dt>
+                        <dd class="col-sm-8">
+                            <span class="@(Model.Status == "Active" ? "status-active" : Model.Status == "Inactive" ? "status-inactive" : "status-archived")">
+                                @Model.Status
+                            </span>
+                        </dd>
+                    </dl>
 
                     <div class="alert alert-warning mt-4">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <strong>Confirmación requerida:</strong> ¿Estás seguro que deseas eliminar este registro?
+                        <strong>Confirmación requerida:</strong> ¿Estás seguro que deseas eliminar este registro médico?
                     </div>
                 </div>
 
                 <div class="card-footer bg-light">
-                    <form asp-action="Delete" method="post">
-                        <input type="hidden" asp-for="VitalSignId" />
+                    <form asp-action="DeleteConfirmed" method="post">
+                        <input type="hidden" asp-for="MedicalRecordId" />
                         <div class="d-flex justify-content-between">
                             <a asp-action="Index" class="btn btn-outline-secondary">
                                 <i class="bi bi-x-circle me-1"></i> Cancelar
@@ -83,6 +70,33 @@
 </div>
 
 <style>
+    .status-active {
+        color: #fff;
+        background-color: #28a745;
+        padding: 4px 10px;
+        border-radius: 50px;
+        font-size: 0.8em;
+        font-weight: 500;
+    }
+
+    .status-inactive {
+        color: #fff;
+        background-color: #6c757d;
+        padding: 4px 10px;
+        border-radius: 50px;
+        font-size: 0.8em;
+        font-weight: 500;
+    }
+
+    .status-archived {
+        color: #fff;
+        background-color: #6f42c1;
+        padding: 4px 10px;
+        border-radius: 50px;
+        font-size: 0.8em;
+        font-weight: 500;
+    }
+
     .card {
         border-radius: 0.5rem;
     }

@@ -615,23 +615,27 @@ namespace VetScan.Controllers
             return View(model);
         }
 
-        // GET: MedicalConsultations/Delete/5
+        [HttpGet]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
 
             var consultation = await _context.MedicalConsultations
                 .Include(mc => mc.MedicalRecord)
+                    .ThenInclude(mr => mr.Pet)
                 .Include(mc => mc.AttendingVeterinarian)
                     .ThenInclude(v => v.User)
                 .FirstOrDefaultAsync(mc => mc.ConsultationId == id);
 
-            if (consultation == null) return NotFound();
+            if (consultation == null)
+            {
+                TempData["ErrorMessage"] = "Consulta médica no encontrada";
+                return RedirectToAction(nameof(Index));
+            }
 
             return View(consultation);
         }
 
-        // POST: MedicalConsultations/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -639,9 +643,17 @@ namespace VetScan.Controllers
             var consultation = await _context.MedicalConsultations.FindAsync(id);
             if (consultation != null)
             {
-                _context.MedicalConsultations.Remove(consultation);
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Consulta médica eliminada exitosamente";
+                try
+                {
+                    _context.MedicalConsultations.Remove(consultation);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Consulta médica eliminada exitosamente";
+                }
+                catch (DbUpdateException ex)
+                {
+                    _logger.LogError(ex, "Error al eliminar consulta médica");
+                    TempData["ErrorMessage"] = "Error al eliminar la consulta médica. Intente nuevamente.";
+                }
             }
             return RedirectToAction(nameof(Index));
         }

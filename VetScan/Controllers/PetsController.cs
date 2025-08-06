@@ -645,9 +645,39 @@ namespace VetScan.Controllers
 
         private bool PetExists(int id) => _context.Pets.Any(e => e.PetId == id);
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        // GET: Pets/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var pet = await _context.Pets
+                .Include(p => p.Species)
+                .Include(p => p.Breed)
+                .Include(p => p.PetOwner)
+                .ThenInclude(po => po.User)
+                .FirstOrDefaultAsync(p => p.PetId == id && p.IsActive);
+
+            if (pet == null) return NotFound();
+
+            return View(pet);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Delete(int id)
+        {
+            var pet = await _context.Pets
+                .Include(p => p.Species)
+                .Include(p => p.Breed)
+                .Include(p => p.PetOwner)
+                .ThenInclude(po => po.User)
+                .FirstOrDefaultAsync(p => p.PetId == id && p.IsActive);
+            if (pet == null) return NotFound();
+            return View(pet);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)  // Changed name
         {
             try
             {
