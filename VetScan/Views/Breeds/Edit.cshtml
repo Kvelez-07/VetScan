@@ -6,49 +6,72 @@
 
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h2 class="text-center mb-0">@ViewData["Title"]</h2>
+        <div class="col-lg-8">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-primary text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="h5 mb-0"><i class="bi bi-pencil-square me-2"></i>@ViewData["Title"]</h2>
+                        <a asp-action="Index" class="btn btn-sm btn-outline-light">
+                            <i class="bi bi-arrow-left me-1"></i> Volver
+                        </a>
+                    </div>
                 </div>
-                <div class="card-body">
+
+                <div class="card-body p-4">
                     @if (TempData["SuccessMessage"] != null)
                     {
-                        <div class="alert alert-success alert-dismissible fade show">
-                            @TempData["SuccessMessage"]
+                        <div class="alert alert-success alert-dismissible fade show shadow-sm mb-4">
+                            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     }
 
-                    <form asp-action="Edit">
+                    <form asp-action="Edit" class="needs-validation" novalidate>
                         <input type="hidden" asp-for="BreedId" />
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Especie Actual</label>
-                            <input class="form-control" value="@ViewBag.SpeciesName" disabled />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4">
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <strong>Por favor corrija los siguientes errores:</strong>
                         </div>
 
-                        <div class="mb-3">
-                            <label asp-for="BreedName" class="form-label"></label>
-                            <input asp-for="BreedName" class="form-control" />
-                            <span asp-validation-for="BreedName" class="text-danger"></span>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Especie Actual</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-tags text-primary"></i></span>
+                                <input class="form-control" value="@ViewBag.SpeciesName" disabled />
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label asp-for="Description" class="form-label"></label>
-                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-                            <span asp-validation-for="Description" class="text-danger"></span>
+                        <div class="mb-4">
+                            <label asp-for="BreedName" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-tag text-primary"></i></span>
+                                <input asp-for="BreedName" class="form-control" placeholder="Nombre de la raza" required />
+                            </div>
+                            <span asp-validation-for="BreedName" class="text-danger small"></span>
                         </div>
 
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" asp-for="IsActive" />
-                            <label class="form-check-label" asp-for="IsActive"></label>
+                        <div class="mb-4">
+                            <label asp-for="Description" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light align-items-start pt-2"><i class="bi bi-text-paragraph text-primary"></i></span>
+                                <textarea asp-for="Description" class="form-control" rows="4" placeholder="Descripción (opcional)"></textarea>
+                            </div>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
                         </div>
 
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a asp-action="Index" class="btn btn-secondary me-md-2">Cancelar</a>
-                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        <div class="mb-4 form-check form-switch">
+                            <input type="checkbox" class="form-check-input" role="switch" id="IsActive" asp-for="IsActive" />
+                            <label class="form-check-label fw-semibold" asp-for="IsActive"></label>
+                            <small class="text-muted d-block mt-1">Desactive este interruptor para marcar la raza como inactiva.</small>
+                        </div>
+
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i> Guardar Cambios
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -57,8 +80,44 @@
     </div>
 </div>
 
+<style>
+    .form-control, .form-select, .input-group-text {
+        border-radius: 0.375rem;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        }
+
+    .form-switch .form-check-input {
+        width: 2.5em;
+        height: 1.5em;
+    }
+
+    .card {
+        border-radius: 0.5rem;
+    }
+</style>
+
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        (function () {
+            'use strict'
+            const forms = document.querySelectorAll('.needs-validation')
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+    </script>
 }

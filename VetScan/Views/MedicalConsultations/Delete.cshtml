@@ -3,53 +3,98 @@
     ViewData["Title"] = "Eliminar Consulta Médica";
 }
 
-<div class="container mt-4">
-    <div class="card shadow">
-        <div class="card-header bg-danger text-white">
-            <h2 class="mb-0">@ViewData["Title"]</h2>
-        </div>
-        <div class="card-body">
-            <h3>¿Estás seguro que deseas eliminar esta consulta médica?</h3>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-danger text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="h5 mb-0"><i class="bi bi-exclamation-triangle me-2"></i>@ViewData["Title"]</h2>
+                        <a asp-action="Index" class="btn btn-sm btn-outline-light">
+                            <i class="bi bi-arrow-left me-1"></i> Volver
+                        </a>
+                    </div>
+                </div>
 
-            <div class="alert alert-warning">
-                <strong>Advertencia:</strong> Esta acción no se puede deshacer.
+                <div class="card-body p-4">
+                    <div class="alert alert-danger d-flex align-items-center mb-4">
+                        <i class="bi bi-exclamation-octagon-fill fs-4 me-3"></i>
+                        <div>
+                            <h5 class="alert-heading mb-2">¡Advertencia importante!</h5>
+                            <p class="mb-0">Esta acción eliminará permanentemente esta consulta médica y no se puede deshacer.</p>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-semibold text-primary border-bottom pb-2 mb-3">Detalles de la Consulta</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Fecha:</dt>
+                                <dd class="col-sm-8 fw-semibold">@Model.ConsultationDate.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                                <dt class="col-sm-4">Tipo:</dt>
+                                <dd class="col-sm-8">@Model.ConsultationType</dd>
+
+                                <dt class="col-sm-4">Estado:</dt>
+                                <dd class="col-sm-8">@Model.Status</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Mascota:</dt>
+                                <dd class="col-sm-8">@(Model.MedicalRecord?.Pet?.PetName ?? "N/A")</dd>
+
+                                <dt class="col-sm-4">Registro:</dt>
+                                <dd class="col-sm-8">@(Model.MedicalRecord?.RecordNumber ?? "N/A")</dd>
+
+                                <dt class="col-sm-4">Veterinario:</dt>
+                                <dd class="col-sm-8">
+                                    @(Model.AttendingVeterinarian?.User != null ?
+                                                                        $"{Model.AttendingVeterinarian.User.FirstName} {Model.AttendingVeterinarian.User.LastName}" :
+                                                                        "N/A")
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning mt-4">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Confirmación requerida:</strong> ¿Estás seguro que deseas eliminar esta consulta médica?
+                    </div>
+                </div>
+
+                <div class="card-footer bg-light">
+                    <form asp-action="Delete">
+                        <input type="hidden" asp-for="ConsultationId" />
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-1"></i> Sí, Eliminar
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-
-            <div class="row">
-                <div class="col-md-6">
-                    <dl class="row">
-                        <dt class="col-sm-4">Fecha:</dt>
-                        <dd class="col-sm-8">@Model.ConsultationDate.ToString("dd/MM/yyyy HH:mm")</dd>
-
-                        <dt class="col-sm-4">Tipo:</dt>
-                        <dd class="col-sm-8">@Model.ConsultationType</dd>
-
-                        <dt class="col-sm-4">Estado:</dt>
-                        <dd class="col-sm-8">@Model.Status</dd>
-                    </dl>
-                </div>
-
-                <div class="col-md-6">
-                    <dl class="row">
-                        <dt class="col-sm-4">Mascota:</dt>
-                        <dd class="col-sm-8">@Model.MedicalRecord.Pet.PetName</dd>
-
-                        <dt class="col-sm-4">Registro:</dt>
-                        <dd class="col-sm-8">@Model.MedicalRecord.RecordNumber</dd>
-
-                        <dt class="col-sm-4">Veterinario:</dt>
-                        <dd class="col-sm-8">@Model.AttendingVeterinarian.User.FirstName @Model.AttendingVeterinarian.User.LastName</dd>
-                    </dl>
-                </div>
-            </div>
-
-            <form asp-action="Delete">
-                <input type="hidden" asp-for="ConsultationId" />
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                    <a asp-action="Index" class="btn btn-secondary me-md-2">Cancelar</a>
-                    <button type="submit" class="btn btn-danger">Eliminar</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
+
+<style>
+    .card {
+        border-radius: 0.5rem;
+    }
+
+    .alert-danger {
+        border-left: 4px solid #dc3545;
+    }
+
+    .alert-warning {
+        border-left: 4px solid #ffc107;
+    }
+
+    dt {
+        color: #6c757d;
+    }
+</style>

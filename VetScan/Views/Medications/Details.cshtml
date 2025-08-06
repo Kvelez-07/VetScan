@@ -2,7 +2,6 @@
 @model MedicationListViewModel
 @{
     ViewData["Title"] = "Detalles del Medicamento";
-    // Verificar si estamos en modo exportación
     var exporting = Context.Request.Query["exporting"].FirstOrDefault() == "true";
 
     if (exporting)
@@ -22,40 +21,39 @@
 }
 
 <div class="container mt-4">
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-            <div class="d-flex justify-content-between align-items-center">
-                <h2 class="mb-0">@Model.MedicationName</h2>
+    <div class="card border-0 shadow">
+        <div class="card-header bg-primary text-white py-3">
+            <div class="d-flex justify-content-between align-items-center @(exporting ? "no-export" : "")">
+                <h2 class="h5 mb-0"><i class="bi bi-capsule me-2"></i>@Model.MedicationName</h2>
                 <div>
-                    <!-- Botón de Exportación con Dropdown -->
                     <div class="btn-group me-2">
                         <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-download"></i> Exportar
+                            <i class="bi bi-download me-1"></i> Exportar
                         </button>
-                        <ul class="dropdown-menu">
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
                             <li>
                                 <a class="dropdown-item" asp-action="ExportDetailsToPdf" asp-route-id="@Model.MedicationId">
-                                    <i class="bi bi-file-earmark-pdf text-danger"></i> PDF
+                                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i> PDF
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" asp-action="ExportDetailsToImage" asp-route-id="@Model.MedicationId" asp-route-format="png">
-                                    <i class="bi bi-file-image text-success"></i> PNG
+                                    <i class="bi bi-file-image text-success me-2"></i> PNG
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" asp-action="ExportDetailsToImage" asp-route-id="@Model.MedicationId" asp-route-format="jpg">
-                                    <i class="bi bi-file-image text-info"></i> JPG
+                                    <i class="bi bi-file-image text-info me-2"></i> JPG
                                 </a>
                             </li>
                         </ul>
                     </div>
 
                     <a asp-action="Edit" asp-route-id="@Model.MedicationId" class="btn btn-sm btn-warning">
-                        <i class="bi bi-pencil"></i> Editar
+                        <i class="bi bi-pencil me-1"></i> Editar
                     </a>
-                    <a asp-action="Index" class="btn btn-sm btn-secondary">
-                        <i class="bi bi-arrow-left"></i> Volver
+                    <a asp-action="Index" class="btn btn-sm btn-outline-light ms-2">
+                        <i class="bi bi-arrow-left me-1"></i> Volver
                     </a>
                 </div>
             </div>
@@ -66,7 +64,7 @@
                 <div class="col-md-6">
                     <dl class="row">
                         <dt class="col-sm-4">Nombre Comercial:</dt>
-                        <dd class="col-sm-8">@Model.MedicationName</dd>
+                        <dd class="col-sm-8 fw-semibold">@Model.MedicationName</dd>
 
                         <dt class="col-sm-4">Nombre Genérico:</dt>
                         <dd class="col-sm-8">@(Model.GenericName ?? "N/A")</dd>
@@ -75,7 +73,6 @@
                         <dd class="col-sm-8">@(Model.Manufacturer ?? "N/A")</dd>
                     </dl>
                 </div>
-
                 <div class="col-md-6">
                     <dl class="row">
                         <dt class="col-sm-4">Concentración:</dt>
@@ -86,7 +83,7 @@
 
                         <dt class="col-sm-4">Estado:</dt>
                         <dd class="col-sm-8">
-                            <span class="badge @(ViewBag.IsActive == "Activo" ? "bg-success" : "bg-secondary")">
+                            <span class="@(ViewBag.IsActive == "Activo" ? "status-active" : "status-inactive")">
                                 @ViewBag.IsActive
                             </span>
                         </dd>
@@ -103,25 +100,61 @@
                 </div>
             </div>
 
-            <div class="mt-4">
-                <h4>Prescripciones Relacionadas</h4>
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i>
-                    Aquí puedes mostrar las prescripciones que usan este medicamento.
-                    <a asp-controller="Prescriptions" asp-action="Details" asp-route-id="@Model.MedicationId" class="alert-link">Ver todas las prescripciones</a>
+            @if (!exporting)
+            {
+                <div class="mt-4">
+                    <h5 class="fw-semibold border-bottom pb-2 mb-3">Prescripciones Relacionadas</h5>
+                    <div class="alert alert-info d-flex align-items-center">
+                        <i class="bi bi-info-circle fs-4 me-3"></i>
+                        <div>
+                            <h6 class="alert-heading mb-1">Uso en prescripciones</h6>
+                            <p class="mb-0">Este medicamento aparece en las siguientes prescripciones.</p>
+                            <a asp-controller="Prescriptions" asp-action="Index" asp-route-medicationId="@Model.MedicationId" class="btn btn-link p-0">
+                                Ver todas las prescripciones <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            }
         </div>
 
-        <div class="card-footer">
-            <div class="d-flex justify-content-end gap-2">
-@*                 <a asp-action="Edit" asp-route-id="@Model.MedicationId" class="btn btn-warning">
-                    <i class="bi bi-pencil"></i> Editar
-                </a> *@
-                <a asp-action="Index" class="btn btn-outline-secondary">
-                    <i class="bi bi-list"></i> Volver al listado
+        <div class="card-footer bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i> ID: @Model.MedicationId | Creado: @ViewBag.CreatedDate
+                </small>
+                <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-list me-1"></i> Volver al listado
                 </a>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .status-active {
+        color: #fff;
+        background-color: #28a745;
+        padding: 4px 10px;
+        border-radius: 50px;
+        font-size: 0.8em;
+        font-weight: 500;
+    }
+
+    .status-inactive {
+        color: #fff;
+        background-color: #6c757d;
+        padding: 4px 10px;
+        border-radius: 50px;
+        font-size: 0.8em;
+        font-weight: 500;
+    }
+
+    .card {
+        border-radius: 0.5rem;
+    }
+
+    dt {
+        color: #6c757d;
+    }
+</style>

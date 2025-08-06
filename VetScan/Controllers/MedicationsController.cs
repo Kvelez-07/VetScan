@@ -479,6 +479,16 @@ namespace VetScan.Controllers
             return View(model);
         }
 
+        // GET: Medications/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null) return NotFound();
+            var medication = await _context.Medications
+                .FirstOrDefaultAsync(m => m.MedicationId == id && m.IsActive);
+            if (medication == null) return NotFound();
+            return View(medication);
+        }
+
         // POST: Medications/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]

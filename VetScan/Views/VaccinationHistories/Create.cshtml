@@ -6,88 +6,133 @@
 
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h2 class="text-center mb-0">@ViewData["Title"]</h2>
+        <div class="col-lg-8">
+            <div class="card border-0 shadow">
+                <div class="card-header bg-primary text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="h5 mb-0"><i class="bi bi-plus-circle me-2"></i>@ViewData["Title"]</h2>
+                        <a asp-action="Index" class="btn btn-sm btn-outline-light">
+                            <i class="bi bi-arrow-left me-1"></i> Volver
+                        </a>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form asp-action="Create">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-                        <div class="row mb-3">
+                <div class="card-body p-4">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show shadow-sm mb-4">
+                            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Create" class="needs-validation" novalidate method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4">
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <strong>Por favor corrija los siguientes errores:</strong>
+                        </div>
+
+                        <div class="row mb-4">
                             <div class="col-md-6">
-                                <label asp-for="PetId" class="form-label"></label>
-                                <select asp-for="PetId" class="form-select" required>
-                                    <option value="">-- Seleccione mascota --</option>
-                                    @foreach (var pet in ViewBag.Pets)
-                                    {
-                                        <option value="@pet.PetId">@pet.DisplayText</option>
-                                    }
-                                </select>
-                                <span asp-validation-for="PetId" class="text-danger"></span>
+                                <label asp-for="PetId" class="form-label fw-semibold">Mascota</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-heart text-primary"></i></span>
+                                    <select asp-for="PetId" class="form-select" required>
+                                        <option value="">-- Seleccione mascota --</option>
+                                        @foreach (var pet in ViewBag.Pets)
+                                        {
+                                            <option value="@pet.PetId">@pet.DisplayText</option>
+                                        }
+                                    </select>
+                                </div>
+                                <span asp-validation-for="PetId" class="text-danger small"></span>
                             </div>
                             <div class="col-md-6">
-                                <label asp-for="VaccineId" class="form-label"></label>
-                                <select asp-for="VaccineId" class="form-select" required>
-                                    <option value="">-- Seleccione vacuna --</option>
-                                    @foreach (var vaccine in ViewBag.Vaccines)
-                                    {
-                                        <option value="@vaccine.VaccineId">@vaccine.DisplayText</option>
-                                    }
-                                </select>
-                                <span asp-validation-for="VaccineId" class="text-danger"></span>
+                                <label asp-for="VaccineId" class="form-label fw-semibold">Vacuna</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-shield-plus text-primary"></i></span>
+                                    <select asp-for="VaccineId" class="form-select" required>
+                                        <option value="">-- Seleccione vacuna --</option>
+                                        @foreach (var vaccine in ViewBag.Vaccines)
+                                        {
+                                            <option value="@vaccine.VaccineId">@vaccine.DisplayText</option>
+                                        }
+                                    </select>
+                                </div>
+                                <span asp-validation-for="VaccineId" class="text-danger small"></span>
                             </div>
                         </div>
 
-                        <div class="row mb-3">
+                        <div class="row mb-4">
                             <div class="col-md-6">
-                                <label asp-for="VeterinarianId" class="form-label"></label>
-                                <select asp-for="VeterinarianId" class="form-select" required>
-                                    <option value="">-- Seleccione veterinario --</option>
-                                    @foreach (var vet in ViewBag.Veterinarians)
-                                    {
-                                        <option value="@vet.VeterinarianId">@vet.DisplayText</option>
-                                    }
-                                </select>
-                                <span asp-validation-for="VeterinarianId" class="text-danger"></span>
+                                <label asp-for="VeterinarianId" class="form-label fw-semibold">Veterinario</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-person-badge text-primary"></i></span>
+                                    <select asp-for="VeterinarianId" class="form-select" required>
+                                        <option value="">-- Seleccione veterinario --</option>
+                                        @foreach (var vet in ViewBag.Veterinarians)
+                                        {
+                                            <option value="@vet.VeterinarianId">@vet.DisplayText</option>
+                                        }
+                                    </select>
+                                </div>
+                                <span asp-validation-for="VeterinarianId" class="text-danger small"></span>
                             </div>
                             <div class="col-md-6">
-                                <label asp-for="VaccinationDate" class="form-label"></label>
-                                <input asp-for="VaccinationDate" type="date" class="form-control" required />
-                                <span asp-validation-for="VaccinationDate" class="text-danger"></span>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label asp-for="BatchNumber" class="form-label"></label>
-                                <input asp-for="BatchNumber" class="form-control" />
-                                <span asp-validation-for="BatchNumber" class="text-danger"></span>
-                            </div>
-                            <div class="col-md-6">
-                                <label asp-for="ExpirationDate" class="form-label"></label>
-                                <input asp-for="ExpirationDate" type="date" class="form-control" />
-                                <span asp-validation-for="ExpirationDate" class="text-danger"></span>
+                                <label asp-for="VaccinationDate" class="form-label fw-semibold">Fecha de Vacunación</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-calendar-date text-primary"></i></span>
+                                    <input asp-for="VaccinationDate" type="date" class="form-control" required />
+                                </div>
+                                <span asp-validation-for="VaccinationDate" class="text-danger small"></span>
                             </div>
                         </div>
 
-                        <div class="row mb-3">
+                        <div class="row mb-4">
                             <div class="col-md-6">
-                                <label asp-for="NextDueDate" class="form-label"></label>
-                                <input asp-for="NextDueDate" type="date" class="form-control" />
-                                <span asp-validation-for="NextDueDate" class="text-danger"></span>
+                                <label asp-for="BatchNumber" class="form-label fw-semibold">Número de Lote</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-upc-scan text-primary"></i></span>
+                                    <input asp-for="BatchNumber" class="form-control" />
+                                </div>
+                                <span asp-validation-for="BatchNumber" class="text-danger small"></span>
                             </div>
                             <div class="col-md-6">
-                                <label asp-for="Reactions" class="form-label"></label>
-                                <input asp-for="Reactions" class="form-control" />
-                                <span asp-validation-for="Reactions" class="text-danger"></span>
+                                <label asp-for="ExpirationDate" class="form-label fw-semibold">Fecha de Expiración</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-calendar-x text-primary"></i></span>
+                                    <input asp-for="ExpirationDate" type="date" class="form-control" />
+                                </div>
+                                <span asp-validation-for="ExpirationDate" class="text-danger small"></span>
                             </div>
                         </div>
 
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a asp-action="Index" class="btn btn-secondary me-md-2">Cancelar</a>
-                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="NextDueDate" class="form-label fw-semibold">Próxima Dosis</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-calendar-check text-primary"></i></span>
+                                    <input asp-for="NextDueDate" type="date" class="form-control" />
+                                </div>
+                                <span asp-validation-for="NextDueDate" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Reactions" class="form-label fw-semibold">Reacciones</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-exclamation-triangle text-primary"></i></span>
+                                    <input asp-for="Reactions" class="form-control" />
+                                </div>
+                                <span asp-validation-for="Reactions" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i> Registrar Vacunación
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -95,6 +140,21 @@
         </div>
     </div>
 </div>
+
+<style>
+    .form-control, .form-select, .input-group-text {
+        border-radius: 0.375rem;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        }
+
+    .card {
+        border-radius: 0.5rem;
+    }
+</style>
 
 @section Scripts {
     @{

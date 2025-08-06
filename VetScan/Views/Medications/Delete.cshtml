@@ -1,7 +1,6 @@
-﻿@using VetScan.ViewModels
-@model AppUsersListViewModel
+﻿@model VetScan.Models.Medication
 @{
-    ViewData["Title"] = "Eliminar Usuario";
+    ViewData["Title"] = "Eliminar Medicamento";
 }
 
 <div class="container mt-5">
@@ -22,47 +21,44 @@
                         <i class="bi bi-exclamation-octagon-fill fs-4 me-3"></i>
                         <div>
                             <h5 class="alert-heading mb-2">¡Advertencia importante!</h5>
-                            <p class="mb-0">Esta acción eliminará permanentemente este usuario y no se puede deshacer.</p>
+                            <p class="mb-0">Esta acción eliminará permanentemente este medicamento y no se puede deshacer.</p>
                         </div>
                     </div>
 
-                    <h5 class="fw-semibold text-primary border-bottom pb-2 mb-3">Detalles del Usuario</h5>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <dl class="row">
-                                <dt class="col-sm-4">Usuario:</dt>
-                                <dd class="col-sm-8 fw-semibold">@Model.Username</dd>
+                    <h5 class="fw-semibold text-primary border-bottom pb-2 mb-3">Detalles del Medicamento</h5>
 
-                                <dt class="col-sm-4">Nombre:</dt>
-                                <dd class="col-sm-8">@Model.FullName</dd>
-                            </dl>
-                        </div>
-                        <div class="col-md-6">
-                            <dl class="row">
-                                <dt class="col-sm-4">Rol:</dt>
-                                <dd class="col-sm-8">@Model.RoleName</dd>
+                    <dl class="row">
+                        <dt class="col-sm-4">Nombre Comercial:</dt>
+                        <dd class="col-sm-8 fw-semibold">@Model.MedicationName</dd>
 
-                                <dt class="col-sm-4">Correo:</dt>
-                                <dd class="col-sm-8">@Model.Email</dd>
-                            </dl>
-                        </div>
-                    </div>
+                        <dt class="col-sm-4">Nombre Genérico:</dt>
+                        <dd class="col-sm-8">@(Model.GenericName ?? "N/A")</dd>
+
+                        <dt class="col-sm-4">Fabricante:</dt>
+                        <dd class="col-sm-8">@(Model.Manufacturer ?? "N/A")</dd>
+
+                        <dt class="col-sm-4">Concentración:</dt>
+                        <dd class="col-sm-8">@(Model.Concentration ?? "N/A")</dd>
+
+                        <dt class="col-sm-4">Categoría:</dt>
+                        <dd class="col-sm-8">@(Model.Category ?? "N/A")</dd>
+                    </dl>
 
                     <div class="alert alert-warning mt-4">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <strong>Confirmación requerida:</strong> ¿Estás seguro que deseas eliminar este usuario?
+                        <strong>Confirmación requerida:</strong> ¿Estás seguro que deseas eliminar este medicamento?
                     </div>
                 </div>
 
                 <div class="card-footer bg-light">
-                    <form asp-action="Delete">
-                        <input type="hidden" asp-for="UserId" />
+                    <form asp-action="DeleteConfirmed" method="post">
+                        <input type="hidden" asp-for="MedicationId" />
                         <div class="d-flex justify-content-between">
                             <a asp-action="Index" class="btn btn-outline-secondary">
                                 <i class="bi bi-x-circle me-1"></i> Cancelar
                             </a>
                             <button type="submit" class="btn btn-danger">
-                                <i class="bi bi-trash me-1"></i> Sí, Eliminar
+                                <i class="bi bi-trash me-1"></i> Eliminar
                             </button>
                         </div>
                     </form>

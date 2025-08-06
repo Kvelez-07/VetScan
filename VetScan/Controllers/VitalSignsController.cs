@@ -618,12 +618,26 @@ namespace VetScan.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var vitalSign = await _context.VitalSigns.FindAsync(id);
-            if (vitalSign != null)
+
+            if (vitalSign == null)
+            {
+                TempData["ErrorMessage"] = "Registro de signos vitales no encontrado";
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
             {
                 _context.VitalSigns.Remove(vitalSign);
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Signos vitales eliminados exitosamente";
+                TempData["SuccessMessage"] = "Registro de signos vitales eliminado exitosamente";
             }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Error al eliminar signos vitales");
+                TempData["ErrorMessage"] = "No se pudo eliminar el registro. Intente nuevamente.";
+                return RedirectToAction(nameof(Delete), new { id });
+            }
+
             return RedirectToAction(nameof(Index));
         }
 

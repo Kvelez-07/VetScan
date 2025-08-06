@@ -557,7 +557,11 @@ namespace VetScan.Controllers
                 .Include(s => s.Veterinarians)
                 .FirstOrDefaultAsync(s => s.SpecialtyId == id);
 
-            if (specialty == null) return NotFound();
+            if (specialty == null)
+            {
+                TempData["ErrorMessage"] = "Especialidad no encontrada";
+                return RedirectToAction(nameof(Index));
+            }
 
             if (specialty.Veterinarians.Any())
             {
@@ -565,9 +569,18 @@ namespace VetScan.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            specialty.IsActive = false;
-            await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "Especialidad desactivada exitosamente";
+            try
+            {
+                specialty.IsActive = false;
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Especialidad desactivada exitosamente";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Error al desactivar especialidad");
+                TempData["ErrorMessage"] = "No se pudo desactivar la especialidad. Intente nuevamente.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
     }

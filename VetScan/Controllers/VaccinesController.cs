@@ -592,6 +592,24 @@ namespace VetScan.Controllers
             return View(model);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var vaccine = await _context.Vaccines
+                .Include(v => v.Species)
+                .FirstOrDefaultAsync(v => v.VaccineId == id && v.IsActive);
+
+            if (vaccine == null)
+            {
+                TempData["ErrorMessage"] = "Vacuna no encontrada o ya eliminada";
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(vaccine);
+        }
+
         // POST: Vaccines/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]

@@ -669,18 +669,27 @@ namespace VetScan.Controllers
         }
 
         // GET: Prescriptions/Delete/5
+        [HttpGet]
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                TempData["ErrorMessage"] = "ID de prescripción no proporcionado";
+                return RedirectToAction(nameof(Index));
+            }
 
             var prescription = await _context.Prescriptions
                 .Include(p => p.Consultation)
                     .ThenInclude(c => c.MedicalRecord)
                         .ThenInclude(mr => mr.Pet)
                 .Include(p => p.Medication)
-                .FirstOrDefaultAsync(m => m.PrescriptionId == id);
+                .FirstOrDefaultAsync(p => p.PrescriptionId == id);
 
-            if (prescription == null) return NotFound();
+            if (prescription == null)
+            {
+                TempData["ErrorMessage"] = "Prescripción no encontrada";
+                return RedirectToAction(nameof(Index));
+            }
 
             return View(prescription);
         }
@@ -691,12 +700,16 @@ namespace VetScan.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var prescription = await _context.Prescriptions.FindAsync(id);
-            if (prescription != null)
+            if (prescription == null)
             {
-                _context.Prescriptions.Remove(prescription);
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Prescripción eliminada exitosamente";
+                TempData["ErrorMessage"] = "Prescripción no encontrada";
+                return RedirectToAction(nameof(Index));
             }
+
+            _context.Prescriptions.Remove(prescription);
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Prescripción eliminada exitosamente";
+
             return RedirectToAction(nameof(Index));
         }
 
